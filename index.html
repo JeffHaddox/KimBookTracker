@@ -18,6 +18,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- QuaggaJS for Barcode Scanning -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
     <style>
         .line-clamp-2 {
             display: -webkit-box;
@@ -239,6 +242,57 @@
         </div>
     </main>
 
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="fixed inset-0 bg-black z-50 hidden">
+        <div class="relative w-full h-full">
+            <!-- Camera Header -->
+            <div class="absolute top-0 left-0 right-0 bg-black bg-opacity-70 p-4 z-10">
+                <div class="flex items-center justify-between text-white">
+                    <button id="close-camera-btn" class="flex items-center gap-2 text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+                    <h3 class="text-lg font-bold">Scan Barcode</h3>
+                    <button id="toggle-flash-btn" class="p-2 bg-white bg-opacity-20 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Camera Feed Container -->
+            <div id="camera-container" class="w-full h-full relative">
+                <div id="camera-scanner" class="w-full h-full"></div>
+                
+                <!-- Scanning Overlay -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="border-2 border-red-500 w-80 h-32 relative">
+                        <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-red-500"></div>
+                        <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-red-500"></div>
+                        <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-red-500"></div>
+                        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-red-500"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-sm">
+                                Position barcode in the frame
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanning Status -->
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-6">
+                <div class="text-center">
+                    <div id="scanning-status" class="text-white text-lg font-bold mb-2">Looking for barcode...</div>
+                    <div id="barcode-result" class="text-green-400 text-sm hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Book Modal -->
     <div id="add-book-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
@@ -337,10 +391,216 @@
             }
         }
 
-        // Camera functions
-        function openCamera() {
-            alert('📸 Camera feature!\n\nIn a real app, this would:\n• Request camera permissions\n• Open camera interface\n• Allow barcode/photo capture\n\nFor now, this is a demo! 🎉');
+        // Camera and Barcode Scanning Functions
+        var isScanning = false;
+        var scanningTimeout;
+
+        function startBarcodeScanner() {
+            console.log('Starting barcode scanner...');
+            
+            // Check if QuaggaJS is loaded
+            if (typeof Quagga === 'undefined') {
+                alert('📱 Barcode scanner not loaded!\n\nPlease refresh the page and try again.');
+                return;
+            }
+
+            // Check for camera support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('📱 Camera not supported on this device!\n\nPlease use manual search instead.');
+                return;
+            }
+
             hideModal();
+            document.getElementById('camera-modal').classList.remove('hidden');
+            
+            // Configure Quagga barcode scanner
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#camera-scanner'),
+                    constraints: {
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                        facingMode: "environment" // Back camera
+                    }
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                },
+                locate: true,
+                frequency: 10
+            }, function(err) {
+                if (err) {
+                    console.error('Quagga initialization error:', err);
+                    closeBarcodeScanner();
+                    alert('📱 Camera access failed!\n\nPlease allow camera access and try again.\n\nError: ' + err.message);
+                    return;
+                }
+                console.log("Quagga initialization complete");
+                Quagga.start();
+                isScanning = true;
+                
+                // Auto-close scanner after 30 seconds
+                scanningTimeout = setTimeout(function() {
+                    if (isScanning) {
+                        closeBarcodeScanner();
+                        alert('⏰ Scanning timeout!\n\nNo barcode detected. Please try again or use manual search.');
+                    }
+                }, 30000);
+            });
+
+            // Listen for barcode detection
+            Quagga.onDetected(function(result) {
+                if (!isScanning) return;
+                
+                var code = result.codeResult.code;
+                console.log('Barcode detected:', code);
+                
+                // Update status
+                document.getElementById('scanning-status').textContent = 'Barcode Found!';
+                document.getElementById('barcode-result').textContent = 'Code: ' + code;
+                document.getElementById('barcode-result').classList.remove('hidden');
+                
+                // Stop scanning
+                isScanning = false;
+                clearTimeout(scanningTimeout);
+                
+                // Process the barcode after a short delay
+                setTimeout(function() {
+                    closeBarcodeScanner();
+                    lookupBookByBarcode(code);
+                }, 1500);
+            });
+        }
+
+        function closeBarcodeScanner() {
+            console.log('Closing barcode scanner...');
+            isScanning = false;
+            
+            if (scanningTimeout) {
+                clearTimeout(scanningTimeout);
+            }
+            
+            if (typeof Quagga !== 'undefined') {
+                Quagga.stop();
+            }
+            
+            document.getElementById('camera-modal').classList.add('hidden');
+            
+            // Reset status
+            document.getElementById('scanning-status').textContent = 'Looking for barcode...';
+            document.getElementById('barcode-result').classList.add('hidden');
+        }
+
+        function lookupBookByBarcode(barcode) {
+            console.log('Looking up book with barcode:', barcode);
+            
+            // Show loading message
+            var loadingAlert = alert;
+            
+            // In a real app, you'd call an API like:
+            // - Google Books API
+            // - Open Library API
+            // - WorldCat API
+            
+            // For demo, we'll simulate an API call
+            setTimeout(function() {
+                // Simulate API response based on barcode
+                var bookData = simulateBookLookup(barcode);
+                
+                if (bookData) {
+                    showBookFoundDialog(bookData);
+                } else {
+                    alert('📚 Book not found!\n\nBarcode: ' + barcode + '\n\nThis book might not be in our database. Try manual search instead!');
+                }
+            }, 1000);
+        }
+
+        function simulateBookLookup(barcode) {
+            // Simulate different book results based on barcode
+            var mockBooks = {
+                '9780143127741': {
+                    title: 'The Seven Husbands of Evelyn Hugo',
+                    author: 'Taylor Jenkins Reid',
+                    pages: 400,
+                    genre: 'Fiction',
+                    rating: 4.5,
+                    year: 2017
+                },
+                '9780385547348': {
+                    title: 'Lessons in Chemistry',
+                    author: 'Bonnie Garmus',
+                    pages: 390,
+                    genre: 'Fiction',
+                    rating: 4.4,
+                    year: 2022
+                },
+                '9780593418025': {
+                    title: 'Project Hail Mary',
+                    author: 'Andy Weir',
+                    pages: 496,
+                    genre: 'Science Fiction',
+                    rating: 4.6,
+                    year: 2021
+                }
+            };
+            
+            // Check if we have a mock book for this barcode
+            if (mockBooks[barcode]) {
+                return mockBooks[barcode];
+            }
+            
+            // If not, generate a random book based on barcode
+            var titles = ['The Midnight Library', 'Atomic Habits', 'Dune', 'The Thursday Murder Club', 'Where the Crawdads Sing'];
+            var authors = ['Matt Haig', 'James Clear', 'Frank Herbert', 'Richard Osman', 'Delia Owens'];
+            var genres = ['Fiction', 'Self-Help', 'Science Fiction', 'Mystery', 'Drama'];
+            
+            var index = parseInt(barcode.slice(-1)) % titles.length;
+            
+            return {
+                title: titles[index],
+                author: authors[index],
+                pages: 200 + (index * 100),
+                genre: genres[index],
+                rating: 4.0 + (index * 0.2),
+                year: 2020 + index
+            };
+        }
+
+        function showBookFoundDialog(book) {
+            var message = '📚 Book Found!\n\n';
+            message += '📖 Title: ' + book.title + '\n';
+            message += '✍️ Author: ' + book.author + '\n';
+            message += '📄 Pages: ' + book.pages + '\n';
+            message += '🏷️ Genre: ' + book.genre + '\n';
+            message += '⭐ Rating: ' + book.rating + '/5\n';
+            message += '📅 Year: ' + book.year + '\n\n';
+            message += 'Add this book to your library?';
+            
+            if (confirm(message)) {
+                alert('🎉 "' + book.title + '" added to your library!\n\nYou can now see it in your My Library tab.');
+                // In a real app, you'd save this to your database
+            }
+        }
+
+        // Updated camera functions
+        function openCamera() {
+            startBarcodeScanner();
+        }
+
+        function openPhotoCapture() {
+            alert('📸 Photo Book Recognition!\n\nThis feature would:\n• Take a photo of the book cover\n• Use AI to identify the book\n• Add it to your library\n\nFor now, try the barcode scanner! 📱');
         }
 
         function manualSearch() {
@@ -411,12 +671,19 @@
                 console.log('Barcode button listener added');
             }
             if (photoBtn) {
-                photoBtn.addEventListener('click', openCamera);
+                photoBtn.addEventListener('click', openPhotoCapture);
                 console.log('Photo button listener added');
             }
             if (manualBtn) {
                 manualBtn.addEventListener('click', manualSearch);
                 console.log('Manual search button listener added');
+            }
+            
+            // Camera modal buttons
+            var closeCameraBtn = document.getElementById('close-camera-btn');
+            if (closeCameraBtn) {
+                closeCameraBtn.addEventListener('click', closeBarcodeScanner);
+                console.log('Close camera button listener added');
             }
             
             // Initialize - show library tab
