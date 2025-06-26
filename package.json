@@ -1,0 +1,23 @@
+{
+  "name": "booktracker-app",
+  "version": "1.0.0",
+  "description": "A beautiful reading tracker app",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve -s .",
+    "build": "echo 'No build process needed for static files'",
+    "deploy": "gh-pages -d ."
+  },
+  "keywords": ["reading", "books", "tracker", "react"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0",
+    "serve": "^14.0.0"
+  },
+  "homepage": "https://YOUR_GITHUB_USERNAME.github.io/booktracker-app"
+}

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookTracker - Your Reading Adventure</title>
+    <meta name="description" content="Track your reading journey with BookTracker - a beautiful and intuitive book tracking app">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .backdrop-blur-sm {
+            backdrop-filter: blur(4px);
+        }
+        
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Star, Plus, Camera, Scan, BookOpen, TrendingUp, Filter, Calendar, User, Tag, BarChart3, Target, Search, Heart, Share2, ArrowRight, Trophy, Flame, Sparkles, Zap, Instagram, Twitter, Facebook } = lucide;
+
+        const BookTracker = () => {
+          // Sample data for demonstration
+          const [books, setBooks] = useState([
+            {
+              id: 1,
+              title: "The Midnight Library",
+              author: "Matt Haig",
+              genre: "Fiction",
+              pages: 288,
+              rating: 5,
+              dateRead: "2024-12-15",
+              cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=300&fit=crop",
+              status: "read"
+            },
+            {
+              id: 2,
+              title: "Atomic Habits",
+              author: "James Clear",
+              genre: "Self-Help",
+              pages: 320,
+              rating: 4,
+              dateRead: "2024-11-28",
+              cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=200&h=300&fit=crop",
+              status: "read"
+            },
+            {
+              id: 3,
+              title: "Dune",
+              author: "Frank Herbert",
+              genre: "Science Fiction",
+              pages: 688,
+              rating: 5,
+              dateRead: "2024-10-20",
+              cover: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=300&fit=crop",
+              status: "read"
+            }
+          ]);
+
+          const [toReadBooks, setToReadBooks] = useState([
+            {
+              id: 4,
+              title: "The Seven Husbands of Evelyn Hugo",
+              author: "Taylor Jenkins Reid",
+              genre: "Fiction",
+              pages: 400,
+              priority: "high",
+              cover: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=300&fit=crop",
+              status: "to-read"
+            },
+            {
+              id: 5,
+              title: "Sapiens",
+              author: "Yuval Noah Harari",
+              genre: "History",
+              pages: 464,
+              priority: "medium",
+              cover: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=300&fit=crop",
+              status: "to-read"
+            }
+          ]);
+
+          const [recommendations] = useState([
+            {
+              id: 6,
+              title: "Klara and the Sun",
+              author: "Kazuo Ishiguro",
+              genre: "Fiction",
+              pages: 303,
+              reason: "Because you loved The Midnight Library",
+              cover: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=300&fit=crop"
+            },
+            {
+              id: 7,
+              title: "The Power of Now",
+              author: "Eckhart Tolle",
+              genre: "Self-Help",
+              pages: 236,
+              reason: "Based on your 4-star rating of Atomic Habits",
+              cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=300&fit=crop"
+            }
+          ]);
+
+          const [activeTab, setActiveTab] = useState('library');
+          const [timeframe, setTimeframe] = useState('year');
+          const [searchTerm, setSearchTerm] = useState('');
+          const [filterGenre, setFilterGenre] = useState('all');
+          const [showAddModal, setShowAddModal] = useState(false);
+          const [showShareModal, setShowShareModal] = useState(false);
+          const [shareContent, setShareContent] = useState(null);
+          const [particles, setParticles] = useState([]);
+
+          // Floating particles animation
+          useEffect(() => {
+            const newParticles = Array.from({ length: 15 }, (_, i) => ({
+              id: i,
+              x: Math.random() * 100,
+              y: Math.random() * 100,
+              size: Math.random() * 4 + 2,
+              speed: Math.random() * 2 + 1,
+              opacity: Math.random() * 0.5 + 0.2
+            }));
+            setParticles(newParticles);
+
+            const interval = setInterval(() => {
+              setParticles(prev => prev.map(particle => ({
+                ...particle,
+                y: particle.y <= 0 ? 100 : particle.y - particle.speed * 0.1,
+                x: particle.x + Math.sin(Date.now() * 0.001 + particle.id) * 0.5
+              })));
+            }, 100);
+
+            return () => clearInterval(interval);
+          }, []);
+
+          // Calculate reading statistics
+          const calculateStats = () => {
+            const now = new Date();
+            const readBooks = books.filter(book => book.status === 'read');
+            
+            let filteredBooks = readBooks;
+            
+            if (timeframe === 'month') {
+              const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+              filteredBooks = readBooks.filter(book => new Date(book.dateRead) >= monthAgo);
+            } else if (timeframe === 'year') {
+              const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+              filteredBooks = readBooks.filter(book => new Date(book.dateRead) >= yearAgo);
+            }
+
+            const totalBooks = filteredBooks.length;
+            const totalPages = filteredBooks.reduce((sum, book) => sum + book.pages, 0);
+            const avgRating = filteredBooks.length > 0 
+              ? (filteredBooks.reduce((sum, book) => sum + book.rating, 0) / filteredBooks.length).toFixed(1)
+              : 0;
+
+            // Genre breakdown
+            const genreStats = filteredBooks.reduce((acc, book) => {
+              acc[book.genre] = (acc[book.genre] || 0) + 1;
+              return acc;
+            }, {});
+
+            // Author breakdown
+            const authorStats = filteredBooks.reduce((acc, book) => {
+              acc[book.author] = (acc[book.author] || 0) + 1;
+              return acc;
+            }, {});
+
+            return { totalBooks, totalPages, avgRating, genreStats, authorStats };
+          };
+
+          const stats = calculateStats();
+
+          const StarRating = ({ rating, onRate, interactive = false }) => {
+            return React.createElement('div', { className: "flex gap-1" },
+              [1, 2, 3, 4, 5].map((star) =>
+                React.createElement(Star, {
+                  key: star,
+                  size: 16,
+                  className: `${
+                    star <= rating 
+                      ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm' 
+                      : 'text-gray-300'
+                  } ${interactive ? 'cursor-pointer hover:text-yellow-400 hover:scale-110 transition-all' : ''}`,
+                  onClick: () => interactive && onRate && onRate(star)
+                })
+              )
+            );
+          };
+
+          const ShareModal = () => (
+            React.createElement('div', { className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm" },
+              React.createElement('div', { className: "bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl transform animate-pulse" },
+                React.createElement('div', { className: "text-center" },
+                  React.createElement('div', { className: "w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center" },
+                    React.createElement(Share2, { className: "text-white", size: 24 })
+                  ),
+                  React.createElement('h3', { className: "text-xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" },
+                    "Share Your Reading Journey!"
+                  ),
+                  shareContent?.type === 'book' ? (
+                    React.createElement('div', { className: "mb-4" },
+                      React.createElement('p', { className: "text-gray-600 mb-2" }, "Share this amazing book:"),
+                      React.createElement('div', { className: "bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl" },
+                        React.createElement('p', { className: "font-semibold text-gray-800" }, `"${shareContent.book.title}"`),
+                        React.createElement('p', { className: "text-sm text-gray-600" }, `by ${shareContent.book.author}`),
+                        React.createElement('div', { className: "flex justify-center mt-2" },
+                          React.createElement(StarRating, { rating: shareContent.book.rating })
+                        )
+                      )
+                    )
+                  ) : (
+                    React.createElement('div', { className: "mb-4" },
+                      React.createElement('p', { className: "text-gray-600 mb-2" }, "Share your reading stats:"),
+                      React.createElement('div', { className: "bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl" },
+                        React.createElement('p', { className: "font-bold text-2xl text-gray-800" }, `${stats.totalBooks} books`),
+                        React.createElement('p', { className: "text-sm text-gray-600" }, `${stats.totalPages.toLocaleString()} pages read`),
+                        React.createElement('p', { className: "text-sm text-gray-600" }, `⭐ ${stats.avgRating} avg rating`)
+                      )
+                    )
+                  ),
+                  
+                  React.createElement('div', { className: "grid grid-cols-3 gap-3 mb-4" },
+                    React.createElement('button', { className: "flex flex-col items-center p-3 bg-gradient-to-br from-pink-500 to-red-500 text-white rounded-xl hover:scale-105 transition-transform shadow-lg" },
+                      React.createElement(Instagram, { size: 20 }),
+                      React.createElement('span', { className: "text-xs mt-1" }, "Instagram")
+                    ),
+                    React.createElement('button', { className: "flex flex-col items-center p-3 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-xl hover:scale-105 transition-transform shadow-lg" },
+                      React.createElement(Twitter, { size: 20 }),
+                      React.createElement('span', { className: "text-xs mt-1" }, "Twitter")
+                    ),
+                    React.createElement('button', { className: "flex flex-col items-center p-3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl hover:scale-105 transition-transform shadow-lg" },
+                      React.createElement(Facebook, { size: 20 }),
+                      React.createElement('span', { className: "text-xs mt-1" }, "Facebook")
+                    )
+                  )
+                ),
+                
+                React.createElement('button', {
+                  onClick: () => setShowShareModal(false),
+                  className: "w-full mt-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                }, "Cancel")
+              )
+            )
+          );
+
+          // Rest of your component code would go here...
+          // For brevity, I'll include the main render return
+
+          return React.createElement('div', { className: "min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 relative overflow-hidden" },
+            // Animated Background Particles
+            particles.map(particle =>
+              React.createElement('div', {
+                key: particle.id,
+                className: "absolute rounded-full bg-gradient-to-br from-purple-400 to-pink-400 animate-pulse",
+                style: {
+                  left: `${particle.x}%`,
+                  top: `${particle.y}%`,
+                  width: `${particle.size}px`,
+                  height: `${particle.size}px`,
+                  opacity: particle.opacity,
+                }
+              })
+            ),
+
+            // Header
+            React.createElement('header', { className: "bg-white bg-opacity-90 backdrop-blur-md shadow-xl border-b border-purple-100 relative z-10" },
+              React.createElement('div', { className: "max-w-6xl mx-auto px-4 py-6" },
+                React.createElement('div', { className: "flex items-center justify-between" },
+                  React.createElement('div', { className: "flex items-center gap-4" },
+                    React.createElement('div', { className: "w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg" },
+                      React.createElement(BookOpen, { className: "text-white", size: 28 })
+                    ),
+                    React.createElement('div', null,
+                      React.createElement('h1', { className: "text-3xl font-black bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 bg-clip-text text-transparent" },
+                        "BookTracker"
+                      ),
+                      React.createElement('p', { className: "text-sm text-gray-600 font-medium" }, "Your Reading Adventure Awaits! ✨")
+                    )
+                  ),
+                  React.createElement('button', {
+                    onClick: () => setShowAddModal(true),
+                    className: "bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all flex items-center gap-3 font-bold shadow-lg hover:scale-105"
+                  },
+                    React.createElement(Plus, { size: 20 }),
+                    "Add Book",
+                    React.createElement(Sparkles, { size: 16, className: "animate-pulse" })
+                  )
+                )
+              )
+            ),
+
+            // Simple demo content for now
+            React.createElement('main', { className: "max-w-6xl mx-auto px-4 py-8 relative z-10" },
+              React.createElement('div', { className: "text-center" },
+                React.createElement('h2', { className: "text-4xl font-black mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" },
+                  "Welcome to BookTracker! 📚"
+                ),
+                React.createElement('p', { className: "text-xl text-gray-600 mb-8" },
+                  "Your beautiful reading journey starts here!"
+                ),
+                React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-6" },
+                  React.createElement('div', { className: "bg-white bg-opacity-90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-2 border-blue-100 hover:scale-105 transition-all" },
+                    React.createElement('div', { className: "w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4" },
+                      React.createElement(BookOpen, { className: "text-white", size: 28 })
+                    ),
+                    React.createElement('h3', { className: "text-xl font-bold text-gray-800 mb-2" }, "Track Your Books"),
+                    React.createElement('p', { className: "text-gray-600" }, "Keep track of every book you've read with ratings and reviews!")
+                  ),
+                  React.createElement('div', { className: "bg-white bg-opacity-90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-2 border-purple-100 hover:scale-105 transition-all" },
+                    React.createElement('div', { className: "w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4" },
+                      React.createElement(TrendingUp, { className: "text-white", size: 28 })
+                    ),
+                    React.createElement('h3', { className: "text-xl font-bold text-gray-800 mb-2" }, "Get Recommendations"),
+                    React.createElement('p', { className: "text-gray-600" }, "Discover your next favorite book with personalized suggestions!")
+                  ),
+                  React.createElement('div', { className: "bg-white bg-opacity-90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-2 border-green-100 hover:scale-105 transition-all" },
+                    React.createElement('div', { className: "w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4" },
+                      React.createElement(BarChart3, { className: "text-white", size: 28 })
+                    ),
+                    React.createElement('h3', { className: "text-xl font-bold text-gray-800 mb-2" }, "Analyze Your Reading"),
+                    React.createElement('p', { className: "text-gray-600" }, "See beautiful analytics of your reading journey and progress!")
+                  )
+                )
+              )
+            ),
+
+            // Modals
+            showAddModal && React.createElement('div', { className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" },
+              React.createElement('div', { className: "bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl" },
+                React.createElement('h3', { className: "text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent" },
+                  "Add Your Next Great Read!"
+                ),
+                React.createElement('p', { className: "text-center text-gray-600 mb-6" }, "Feature coming soon! 🚀"),
+                React.createElement('button', {
+                  onClick: () => setShowAddModal(false),
+                  className: "w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-2xl font-bold hover:scale-105 transition-all"
+                }, "Close")
+              )
+            ),
+            showShareModal && React.createElement(ShareModal)
+          );
+        };
+
+        // Render the app
+        ReactDOM.render(React.createElement(BookTracker), document.getElementById('root'));
+    </script>
+</body>
+</html>
