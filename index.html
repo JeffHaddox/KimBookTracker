@@ -15,13 +15,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="BookTracker">
     
-    <!-- Tailwind CSS (CDN for demo only) -->
-    <script>
-        // Suppress Tailwind production warning for demo
-        if (!window.location.hostname.includes('localhost')) {
-            console.warn('Note: Using Tailwind CDN for demo purposes. For production, use Tailwind CLI.');
-        }
-    </script>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -48,15 +42,6 @@
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
-    <!-- Floating particles -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-purple-400 rounded-full animate-pulse opacity-30"></div>
-        <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-pink-400 rounded-full animate-pulse opacity-40"></div>
-        <div class="absolute top-1/2 left-1/3 w-2 h-2 bg-blue-400 rounded-full animate-pulse opacity-35"></div>
-        <div class="absolute top-3/4 right-1/3 w-5 h-5 bg-purple-300 rounded-full animate-pulse opacity-25"></div>
-        <div class="absolute top-1/6 right-1/2 w-3 h-3 bg-pink-300 rounded-full animate-pulse opacity-30"></div>
-    </div>
-
     <!-- Header -->
     <header class="bg-white bg-opacity-90 shadow-xl border-b border-purple-100 relative z-10">
         <div class="max-w-6xl mx-auto px-4 py-6">
@@ -303,20 +288,20 @@
             console.log('Switching to tab:', tabName);
             
             // Hide all content
-            const allContent = document.querySelectorAll('.tab-content');
-            allContent.forEach(content => {
-                content.classList.add('hidden');
-            });
+            var allContent = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < allContent.length; i++) {
+                allContent[i].classList.add('hidden');
+            }
             
             // Remove active class from all tabs
-            const allTabs = document.querySelectorAll('.tab-button');
-            allTabs.forEach(tab => {
-                tab.classList.remove('tab-active');
-                tab.classList.add('text-gray-600', 'hover:text-gray-800');
-            });
+            var allTabs = document.querySelectorAll('.tab-button');
+            for (var i = 0; i < allTabs.length; i++) {
+                allTabs[i].classList.remove('tab-active');
+                allTabs[i].classList.add('text-gray-600', 'hover:text-gray-800');
+            }
             
             // Show selected content
-            const targetContent = document.getElementById('content-' + tabName);
+            var targetContent = document.getElementById('content-' + tabName);
             if (targetContent) {
                 targetContent.classList.remove('hidden');
             } else {
@@ -324,7 +309,7 @@
             }
             
             // Activate selected tab
-            const targetTab = document.getElementById('tab-' + tabName);
+            var targetTab = document.getElementById('tab-' + tabName);
             if (targetTab) {
                 targetTab.classList.add('tab-active');
                 targetTab.classList.remove('text-gray-600', 'hover:text-gray-800');
@@ -336,7 +321,7 @@
         // Modal functions
         function showModal() {
             console.log('Showing modal');
-            const modal = document.getElementById('add-book-modal');
+            var modal = document.getElementById('add-book-modal');
             if (modal) {
                 modal.classList.remove('hidden');
             } else {
@@ -346,22 +331,22 @@
 
         function hideModal() {
             console.log('Hiding modal');
-            const modal = document.getElementById('add-book-modal');
+            var modal = document.getElementById('add-book-modal');
             if (modal) {
                 modal.classList.add('hidden');
             }
         }
 
-        // Camera functions (simplified)
+        // Camera functions
         function openCamera() {
             alert('📸 Camera feature!\n\nIn a real app, this would:\n• Request camera permissions\n• Open camera interface\n• Allow barcode/photo capture\n\nFor now, this is a demo! 🎉');
             hideModal();
         }
 
         function manualSearch() {
-            const bookTitle = prompt('📚 Enter book title to search:');
+            var bookTitle = prompt('📚 Enter book title to search:');
             if (bookTitle) {
-                alert(`🔍 Searching for: "${bookTitle}"\n\nIn a real app, this would:\n• Search book databases\n• Show results with covers\n• Allow you to add books\n\nDemo complete! ✨`);
+                alert('🔍 Searching for: "' + bookTitle + '"\n\nIn a real app, this would:\n• Search book databases\n• Show results with covers\n• Allow you to add books\n\nDemo complete! ✨');
             }
             hideModal();
         }
@@ -371,20 +356,10 @@
             console.log('DOM loaded, setting up event listeners...');
             
             // Tab buttons
-            const tabLibrary = document.getElementById('tab-library');
-            const tabToRead = document.getElementById('tab-to-read');
-            const tabRecommendations = document.getElementById('tab-recommendations');
-            const tabAnalytics = document.getElementById('tab-analytics');
-            
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, setting up event listeners...');
-            
-            // Tab buttons
-            const tabLibrary = document.getElementById('tab-library');
-            const tabToRead = document.getElementById('tab-to-read');
-            const tabRecommendations = document.getElementById('tab-recommendations');
-            const tabAnalytics = document.getElementById('tab-analytics');
+            var tabLibrary = document.getElementById('tab-library');
+            var tabToRead = document.getElementById('tab-to-read');
+            var tabRecommendations = document.getElementById('tab-recommendations');
+            var tabAnalytics = document.getElementById('tab-analytics');
             
             if (tabLibrary) {
                 tabLibrary.addEventListener('click', function() { showTab('library'); });
@@ -404,9 +379,9 @@
             }
             
             // Add book buttons
-            const addBookBtn = document.getElementById('add-book-btn');
-            const addToReadBtn = document.getElementById('add-to-read-btn');
-            const getRecommendationsBtn = document.getElementById('get-recommendations-btn');
+            var addBookBtn = document.getElementById('add-book-btn');
+            var addToReadBtn = document.getElementById('add-to-read-btn');
+            var getRecommendationsBtn = document.getElementById('get-recommendations-btn');
             
             if (addBookBtn) {
                 addBookBtn.addEventListener('click', showModal);
@@ -422,10 +397,10 @@
             }
             
             // Modal buttons
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const barcodeBtn = document.getElementById('barcode-btn');
-            const photoBtn = document.getElementById('photo-btn');
-            const manualBtn = document.getElementById('manual-btn');
+            var closeModalBtn = document.getElementById('close-modal-btn');
+            var barcodeBtn = document.getElementById('barcode-btn');
+            var photoBtn = document.getElementById('photo-btn');
+            var manualBtn = document.getElementById('manual-btn');
             
             if (closeModalBtn) {
                 closeModalBtn.addEventListener('click', hideModal);
@@ -449,7 +424,7 @@
             console.log('BookTracker initialized successfully! 🎉');
         });
 
-        // PWA Service Worker (simplified)
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('sw.js')
@@ -462,29 +437,7 @@
             });
         }
 
-        // PWA Install prompt (simplified)
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', function(e) {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            setTimeout(function() {
-                if (deferredPrompt && confirm('📱 Install BookTracker as an app on your device?')) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function(choiceResult) {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            }, 5000);
-        });
-
         console.log('BookTracker script loaded completely! ✨');
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
