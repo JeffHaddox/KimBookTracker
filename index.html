@@ -11,11 +11,17 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- iOS PWA Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="BookTracker">
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN for demo only) -->
+    <script>
+        // Suppress Tailwind production warning for demo
+        if (!window.location.hostname.includes('localhost')) {
+            console.warn('Note: Using Tailwind CDN for demo purposes. For production, use Tailwind CLI.');
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -381,19 +387,19 @@
             const tabAnalytics = document.getElementById('tab-analytics');
             
             if (tabLibrary) {
-                tabLibrary.addEventListener('click', () => showTab('library'));
+                tabLibrary.addEventListener('click', function() { showTab('library'); });
                 console.log('Library tab listener added');
             }
             if (tabToRead) {
-                tabToRead.addEventListener('click', () => showTab('to-read'));
+                tabToRead.addEventListener('click', function() { showTab('to-read'); });
                 console.log('To-read tab listener added');
             }
             if (tabRecommendations) {
-                tabRecommendations.addEventListener('click', () => showTab('recommendations'));
+                tabRecommendations.addEventListener('click', function() { showTab('recommendations'); });
                 console.log('Recommendations tab listener added');
             }
             if (tabAnalytics) {
-                tabAnalytics.addEventListener('click', () => showTab('analytics'));
+                tabAnalytics.addEventListener('click', function() { showTab('analytics'); });
                 console.log('Analytics tab listener added');
             }
             
@@ -458,14 +464,14 @@
 
         // PWA Install prompt (simplified)
         let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
+        window.addEventListener('beforeinstallprompt', function(e) {
             e.preventDefault();
             deferredPrompt = e;
             
-            setTimeout(() => {
+            setTimeout(function() {
                 if (deferredPrompt && confirm('📱 Install BookTracker as an app on your device?')) {
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt.userChoice.then(function(choiceResult) {
                         if (choiceResult.outcome === 'accepted') {
                             console.log('User accepted the install prompt');
                         }
@@ -476,6 +482,9 @@
         });
 
         console.log('BookTracker script loaded completely! ✨');
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
