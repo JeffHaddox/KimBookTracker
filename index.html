@@ -530,7 +530,7 @@
         let facingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
         let cameraMode = 'barcode'; // 'barcode' or 'photo'
 
-        // PWA Service Worker Registration
+        // PWA Service Worker Registration (with error handling)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('sw.js')
@@ -539,66 +539,111 @@
                     })
                     .catch(function(err) {
                         console.log('ServiceWorker registration failed: ', err);
+                        // Continue without service worker
                     });
             });
         }
 
         // Tab functionality
         function showTab(tabName) {
-            // Hide all tab content
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // Remove active styles from all tabs
-            const tabButtons = document.querySelectorAll('.tab-button');
-            tabButtons.forEach(button => {
-                button.className = 'tab-button flex items-center gap-3 py-4 px-4 border-b-4 font-bold text-sm transition-all hover:scale-105 border-transparent text-gray-600 hover:text-gray-800';
-            });
-            
-            // Show selected tab content
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            
-            // Add active styles to selected tab
-            const activeTab = document.getElementById(`tab-${tabName}`);
-            const gradients = {
-                'library': 'from-blue-500 to-cyan-500',
-                'to-read': 'from-pink-500 to-rose-500',
-                'recommendations': 'from-purple-500 to-indigo-500',
-                'analytics': 'from-green-500 to-emerald-500'
-            };
-            
-            activeTab.className = `tab-button flex items-center gap-3 py-4 px-4 border-b-4 font-bold text-sm transition-all hover:scale-105 border-transparent bg-gradient-to-r ${gradients[tabName]} text-white rounded-t-2xl shadow-lg`;
-            activeTab.innerHTML += '<span class="animate-pulse">✨</span>';
+            try {
+                // Hide all tab content
+                const tabContents = document.querySelectorAll('.tab-content');
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Remove active styles from all tabs
+                const tabButtons = document.querySelectorAll('.tab-button');
+                tabButtons.forEach(button => {
+                    button.className = 'tab-button flex items-center gap-3 py-4 px-4 border-b-4 font-bold text-sm transition-all hover:scale-105 border-transparent text-gray-600 hover:text-gray-800';
+                });
+                
+                // Show selected tab content
+                const contentElement = document.getElementById(`content-${tabName}`);
+                if (contentElement) {
+                    contentElement.classList.remove('hidden');
+                }
+                
+                // Add active styles to selected tab
+                const activeTab = document.getElementById(`tab-${tabName}`);
+                if (activeTab) {
+                    const gradients = {
+                        'library': 'from-blue-500 to-cyan-500',
+                        'to-read': 'from-pink-500 to-rose-500',
+                        'recommendations': 'from-purple-500 to-indigo-500',
+                        'analytics': 'from-green-500 to-emerald-500'
+                    };
+                    
+                    activeTab.className = `tab-button flex items-center gap-3 py-4 px-4 border-b-4 font-bold text-sm transition-all hover:scale-105 border-transparent bg-gradient-to-r ${gradients[tabName]} text-white rounded-t-2xl shadow-lg`;
+                }
+            } catch (error) {
+                console.error('Tab switching error:', error);
+            }
         }
 
         // Modal functionality
         function showModal() {
-            document.getElementById('add-book-modal').classList.remove('hidden');
+            try {
+                const modal = document.getElementById('add-book-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Show modal error:', error);
+            }
         }
 
         function hideModal() {
-            document.getElementById('add-book-modal').classList.add('hidden');
+            try {
+                const modal = document.getElementById('add-book-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Hide modal error:', error);
+            }
         }
 
-        // Real Camera Functions
+        // Camera Functions with better error handling
         async function openBarcodeScanner() {
-            cameraMode = 'barcode';
-            await openCamera();
-            document.getElementById('camera-title').textContent = 'Scan Barcode';
-            document.getElementById('barcode-overlay').classList.remove('hidden');
-            document.getElementById('book-overlay').classList.add('hidden');
-            document.getElementById('camera-instructions').textContent = 'Position barcode in the frame and tap capture';
+            try {
+                cameraMode = 'barcode';
+                await openCamera();
+                
+                const title = document.getElementById('camera-title');
+                const barcodeOverlay = document.getElementById('barcode-overlay');
+                const bookOverlay = document.getElementById('book-overlay');
+                const instructions = document.getElementById('camera-instructions');
+                
+                if (title) title.textContent = 'Scan Barcode';
+                if (barcodeOverlay) barcodeOverlay.classList.remove('hidden');
+                if (bookOverlay) bookOverlay.classList.add('hidden');
+                if (instructions) instructions.textContent = 'Position barcode in the frame and tap capture';
+            } catch (error) {
+                console.error('Barcode scanner error:', error);
+                alert('Could not open barcode scanner. Please try manual search instead.');
+            }
         }
 
         async function openPhotoCapture() {
-            cameraMode = 'photo';
-            await openCamera();
-            document.getElementById('camera-title').textContent = 'Capture Book Cover';
-            document.getElementById('book-overlay').classList.remove('hidden');
-            document.getElementById('barcode-overlay').classList.add('hidden');
-            document.getElementById('camera-instructions').textContent = 'Position book cover in the frame and tap capture';
+            try {
+                cameraMode = 'photo';
+                await openCamera();
+                
+                const title = document.getElementById('camera-title');
+                const barcodeOverlay = document.getElementById('barcode-overlay');
+                const bookOverlay = document.getElementById('book-overlay');
+                const instructions = document.getElementById('camera-instructions');
+                
+                if (title) title.textContent = 'Capture Book Cover';
+                if (bookOverlay) bookOverlay.classList.remove('hidden');
+                if (barcodeOverlay) barcodeOverlay.classList.add('hidden');
+                if (instructions) instructions.textContent = 'Position book cover in the frame and tap capture';
+            } catch (error) {
+                console.error('Photo capture error:', error);
+                alert('Could not open camera. Please try manual search instead.');
+            }
         }
 
         async function openCamera() {
@@ -620,14 +665,17 @@
                 });
 
                 const video = document.getElementById('camera-feed');
-                video.srcObject = currentStream;
+                const modal = document.getElementById('camera-modal');
                 
-                document.getElementById('camera-modal').classList.remove('hidden');
-                
-                // Wait for video to be ready
-                video.addEventListener('loadedmetadata', () => {
-                    video.play();
-                });
+                if (video && modal) {
+                    video.srcObject = currentStream;
+                    modal.classList.remove('hidden');
+                    
+                    // Wait for video to be ready
+                    video.addEventListener('loadedmetadata', () => {
+                        video.play().catch(e => console.error('Video play error:', e));
+                    });
+                }
 
             } catch (error) {
                 console.error('Camera error:', error);
@@ -648,28 +696,34 @@
         }
 
         function closeCameraModal() {
-            // Stop camera stream
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
+            try {
+                // Stop camera stream
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+                
+                // Hide modal and overlays
+                const modal = document.getElementById('camera-modal');
+                const barcodeOverlay = document.getElementById('barcode-overlay');
+                const bookOverlay = document.getElementById('book-overlay');
+                
+                if (modal) modal.classList.add('hidden');
+                if (barcodeOverlay) barcodeOverlay.classList.add('hidden');
+                if (bookOverlay) bookOverlay.classList.add('hidden');
+            } catch (error) {
+                console.error('Close camera error:', error);
             }
-            
-            // Hide modal
-            document.getElementById('camera-modal').classList.add('hidden');
-            
-            // Hide overlays
-            document.getElementById('barcode-overlay').classList.add('hidden');
-            document.getElementById('book-overlay').classList.add('hidden');
         }
 
         async function switchCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
-            
-            facingMode = facingMode === 'environment' ? 'user' : 'environment';
-            
             try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+                
+                facingMode = facingMode === 'environment' ? 'user' : 'environment';
+                
                 currentStream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: facingMode,
@@ -679,8 +733,10 @@
                 });
 
                 const video = document.getElementById('camera-feed');
-                video.srcObject = currentStream;
-                video.play();
+                if (video) {
+                    video.srcObject = currentStream;
+                    video.play().catch(e => console.error('Video play error:', e));
+                }
             } catch (error) {
                 console.error('Camera switch error:', error);
                 facingMode = facingMode === 'environment' ? 'user' : 'environment'; // Revert
@@ -689,106 +745,156 @@
         }
 
         function capturePhoto() {
-            const video = document.getElementById('camera-feed');
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0);
-            
-            // Convert to blob for processing
-            canvas.toBlob(async (blob) => {
-                if (cameraMode === 'barcode') {
-                    await processBarcodeImage(blob);
-                } else {
-                    await processBookCoverImage(blob);
-                }
-            }, 'image/jpeg', 0.8);
+            try {
+                const video = document.getElementById('camera-feed');
+                if (!video) return;
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0);
+                
+                // Convert to blob for processing
+                canvas.toBlob(async (blob) => {
+                    if (cameraMode === 'barcode') {
+                        await processBarcodeImage(blob);
+                    } else {
+                        await processBookCoverImage(blob);
+                    }
+                }, 'image/jpeg', 0.8);
+            } catch (error) {
+                console.error('Capture photo error:', error);
+                alert('Could not capture photo. Please try again.');
+            }
         }
 
         async function processBarcodeImage(imageBlob) {
             closeCameraModal();
-            
-            // In a real app, you'd send this to a barcode scanning service
-            // For now, we'll simulate the process
             alert(`📱 Barcode Processing!\n\n🔍 Analyzing captured image...\n⏳ Scanning for barcodes...\n\n✅ Simulated Result:\n📚 "The Thursday Murder Club"\n👤 Richard Osman\n📖 352 pages\n🏷️ Mystery\n\n🎉 Book would be added to your library!\n\n💡 Real implementation would use:\n• Google Vision API\n• ZXing library\n• QuaggaJS\n• Or similar barcode scanning service`);
         }
 
         async function processBookCoverImage(imageBlob) {
             closeCameraModal();
-            
-            // In a real app, you'd send this to an image recognition service
-            // For now, we'll simulate the process
             alert(`📸 Cover Recognition!\n\n🤖 AI analyzing book cover...\n🔍 Identifying title and author...\n📊 Matching against book database...\n\n✅ Simulated Result:\n📚 "Project Hail Mary"\n👤 Andy Weir\n📖 496 pages\n🏷️ Science Fiction\n⭐ 4.5/5 average rating\n\n🎉 Book would be added to your to-read list!\n\n💡 Real implementation would use:\n• Google Cloud Vision API\n• Amazon Rekognition\n• Custom ML models\n• Book cover databases`);
         }
 
+        // Share functions
         function shareBook(bookTitle) {
-            document.getElementById('share-content').innerHTML = `
-                <p class="text-gray-600 mb-2">Share this amazing book:</p>
-                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl">
-                    <p class="font-semibold text-gray-800">"${bookTitle}"</p>
-                    <p class="text-sm text-gray-600">Click to see full details!</p>
-                    <div class="flex justify-center mt-2">
-                        <span class="text-yellow-400">★★★★★</span>
-                    </div>
-                </div>
-            `;
-            document.getElementById('share-modal').classList.remove('hidden');
+            try {
+                const shareContent = document.getElementById('share-content');
+                const shareModal = document.getElementById('share-modal');
+                
+                if (shareContent) {
+                    shareContent.innerHTML = `
+                        <p class="text-gray-600 mb-2">Share this amazing book:</p>
+                        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl">
+                            <p class="font-semibold text-gray-800">"${bookTitle}"</p>
+                            <p class="text-sm text-gray-600">Click to see full details!</p>
+                            <div class="flex justify-center mt-2">
+                                <span class="text-yellow-400">★★★★★</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (shareModal) {
+                    shareModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Share book error:', error);
+            }
         }
 
         function shareStats() {
-            document.getElementById('share-content').innerHTML = `
-                <p class="text-gray-600 mb-2">Share your reading stats:</p>
-                <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl">
-                    <p class="font-bold text-2xl text-gray-800">3 books</p>
-                    <p class="text-sm text-gray-600">1,296 pages read</p>
-                    <p class="text-sm text-gray-600">⭐ 4.7 avg rating</p>
-                </div>
-            `;
-            document.getElementById('share-modal').classList.remove('hidden');
+            try {
+                const shareContent = document.getElementById('share-content');
+                const shareModal = document.getElementById('share-modal');
+                
+                if (shareContent) {
+                    shareContent.innerHTML = `
+                        <p class="text-gray-600 mb-2">Share your reading stats:</p>
+                        <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl">
+                            <p class="font-bold text-2xl text-gray-800">3 books</p>
+                            <p class="text-sm text-gray-600">1,296 pages read</p>
+                            <p class="text-sm text-gray-600">⭐ 4.7 avg rating</p>
+                        </div>
+                    `;
+                }
+                
+                if (shareModal) {
+                    shareModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Share stats error:', error);
+            }
         }
 
         function hideShareModal() {
-            document.getElementById('share-modal').classList.add('hidden');
+            try {
+                const shareModal = document.getElementById('share-modal');
+                if (shareModal) {
+                    shareModal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Hide share modal error:', error);
+            }
         }
 
         function shareToSocial(platform) {
-            alert(`Sharing to ${platform}! 🎉\n\nIn a real app, this would open the ${platform} sharing dialog.`);
-            hideShareModal();
+            try {
+                alert(`Sharing to ${platform}! 🎉\n\nIn a real app, this would open the ${platform} sharing dialog.`);
+                hideShareModal();
+            } catch (error) {
+                console.error('Share to social error:', error);
+            }
         }
 
         function simulateManualSearch() {
-            hideModal();
-            const bookTitle = prompt("📚 Enter book title to search:");
-            if (bookTitle) {
-                alert(`🔍 Manual Search Simulation!\n\n📖 Searching for: "${bookTitle}"\n🌐 Checking Google Books API...\n✅ Found multiple results!\n\n📋 Results would show:\n• Book covers\n• Author details\n• Page counts\n• Ratings\n• Descriptions\n\n✨ You could then add any book to your library!`);
+            try {
+                hideModal();
+                const bookTitle = prompt("📚 Enter book title to search:");
+                if (bookTitle) {
+                    alert(`🔍 Manual Search Simulation!\n\n📖 Searching for: "${bookTitle}"\n🌐 Checking Google Books API...\n✅ Found multiple results!\n\n📋 Results would show:\n• Book covers\n• Author details\n• Page counts\n• Ratings\n• Descriptions\n\n✨ You could then add any book to your library!`);
+                }
+            } catch (error) {
+                console.error('Manual search error:', error);
             }
         }
 
         // Initialize - show library tab by default
         document.addEventListener('DOMContentLoaded', function() {
-            showTab('library');
+            try {
+                showTab('library');
+                console.log('BookTracker initialized successfully');
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
         });
 
-        // Handle beforeinstallprompt event for PWA installation
+        // PWA install prompt (simplified)
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // Show install banner after a delay
-            setTimeout(() => {
-                if (confirm('📱 Install BookTracker as an app on your device for the best experience?')) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            }, 3000);
+            try {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install banner after a delay
+                setTimeout(() => {
+                    if (deferredPrompt && confirm('📱 Install BookTracker as an app on your device for the best experience?')) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install prompt');
+                            }
+                            deferredPrompt = null;
+                        });
+                    }
+                }, 3000);
+            } catch (error) {
+                console.error('Install prompt error:', error);
+            }
         });
     </script>
     </script>
