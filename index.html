@@ -815,8 +815,12 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>'
   };
   function methodPanel() {
-    if (state.method === 'scan') return '<div class="note"><p>Point your camera at the barcode on the back cover, or type the 13-digit ISBN printed under it.</p>'
-      + '<button type="button" class="btn primary" data-action="scan" id="scan-btn" style="justify-self:start">Start camera</button><div id="reader" class="reader" hidden></div>'
+    if (state.method === 'scan') return '<div class="note"><p>Scan the barcode on the back cover, or type the 13-digit ISBN printed under it. <b>Take a photo</b> is the most reliable on iPhone.</p>'
+      + '<div class="actions"><label class="btn primary" for="barcode-photo">Take a photo</label><input class="sr" type="file" id="barcode-photo" accept="image/*" capture="environment">'
+      + '<button type="button" class="btn" data-action="scan" id="scan-btn">Live scan</button></div>'
+      + '<div id="reader" class="reader" hidden></div>'
+      + '<button type="button" class="btn hot" data-action="capture" id="capture-btn" style="justify-self:center" hidden>Capture</button>'
+      + '<div id="reader-file" hidden></div>'
       + '<div class="inline"><label class="sr" for="isbn">ISBN</label><input class="field" id="isbn" inputmode="numeric" autocomplete="off" placeholder="978…"><button type="button" class="btn" data-action="lookup">Look up</button></div>'
       + '<p class="status" id="lookup-msg" role="status"></p></div>';
     if (state.method === 'photo') return '<div class="note"><label class="btn" for="cover-file" style="justify-self:start">Take or choose a cover photo</label><input class="sr" type="file" id="cover-file" accept="image/*" capture="environment">'
@@ -902,19 +906,75 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       .catch(function () { if (document.body.contains(msg)) msg.textContent = 'Could not reach the book database. Check your connection, or type the details below.'; });
   }
 
-  /* ---------- Live barcode scanner ---------- */
+  /* ---------- Barcode scanning ---------- */
   var scanner = null;
+  function scanConfig() {
+    var F = window.Html5QrcodeSupportedFormats, cfg = { verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+    if (F) cfg.formatsToSupport = [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E];
+    return cfg;
+  }
+  // Scale a photo down so the decoder sees crisp bars without choking on a 12MP image
+  function shrink(file, max) {
+    return new Promise(function (resolve) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { resolve(b ? new File([b], 'scan.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.92);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+  function decodeFile(file, sizes) {
+    sizes = sizes || [1600, 1100, 2400];
+    if (typeof window.Html5Qrcode === 'undefined') return Promise.reject(new Error('not loaded'));
+    var tryAt = function (i) {
+      if (i >= sizes.length) return Promise.reject(new Error('no barcode'));
+      return shrink(file, sizes[i]).then(function (f) {
+        return new window.Html5Qrcode('reader-file', scanConfig()).scanFile(f, false);
+      }).catch(function () { return tryAt(i + 1); });
+    };
+    return tryAt(0);
+  }
+  function readBarcodeImage(file, sizes) {
+    var msg = $('#lookup-msg');
+    msg.textContent = 'Reading the barcode…';
+    decodeFile(file, sizes).then(function (text) {
+      stopScan();
+      $('#isbn').value = text;
+      if (navigator.vibrate) navigator.vibrate(40);
+      lookup();
+    }, function () {
+      if (document.body.contains(msg)) msg.textContent = 'Could not find a barcode in that shot. Get closer so the barcode fills most of the frame, keep it sharp and well lit, and try again. You can also type the ISBN.';
+    });
+  }
+  function captureFrame() {
+    var v = document.querySelector('#reader video');
+    if (!v || !v.videoWidth) { $('#lookup-msg').textContent = 'The camera is still starting. Try Capture again in a second.'; return; }
+    var c = document.createElement('canvas');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0);
+    c.toBlob(function (b) { if (b) readBarcodeImage(new File([b], 'frame.jpg', { type: 'image/jpeg' }), [c.width, 1100]); }, 'image/jpeg', 0.95);
+  }
   function startScan() {
     var msg = $('#lookup-msg'), reader = $('#reader'), btn = $('#scan-btn');
     if (typeof window.Html5Qrcode === 'undefined') { msg.textContent = 'The scanner is still loading. Try again in a moment, or type the ISBN.'; return; }
-    reader.hidden = false; btn.textContent = 'Stop camera'; msg.textContent = 'Hold the barcode inside the box.';
-    var F = window.Html5QrcodeSupportedFormats, cfg = { verbose: false };
-    if (F) cfg.formatsToSupport = [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E];
-    try { scanner = new window.Html5Qrcode('reader', cfg); }
+    reader.hidden = false; btn.textContent = 'Stop live scan'; $('#capture-btn').hidden = false;
+    msg.textContent = 'Fill the box with the barcode and hold steady about 4 to 6 inches away. It reads automatically, or tap Capture.';
+    try { scanner = new window.Html5Qrcode('reader', scanConfig()); }
     catch (e) { stopScan(); msg.textContent = 'The scanner could not start. Type the ISBN instead.'; return; }
     scanner.start(
       { facingMode: 'environment' },
-      { fps: 12, qrbox: function (w, h) { return { width: Math.round(Math.min(w * 0.85, 320)), height: Math.round(Math.max(60, Math.min(h * 0.45, 150))) }; } },
+      {
+        fps: 15,
+        disableFlip: true,
+        qrbox: function (w, h) { return { width: Math.round(w * 0.9), height: Math.round(Math.max(80, Math.min(h * 0.55, 220))) }; },
+        videoConstraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' }] }
+      },
       function (text) { stopScan(); $('#isbn').value = text; if (navigator.vibrate) navigator.vibrate(40); lookup(); },
       function () {}
     ).catch(function () {
@@ -926,7 +986,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     var s = scanner; scanner = null;
     if (s) { try { s.stop().then(function () { try { s.clear(); } catch (e) {} }, function () {}); } catch (e) {} }
     var r = $('#reader'); if (r) r.hidden = true;
-    var b = $('#scan-btn'); if (b) b.textContent = 'Start camera';
+    var c = $('#capture-btn'); if (c) c.hidden = true;
+    var b = $('#scan-btn'); if (b) b.textContent = 'Live scan';
   }
 
   /* ---------- Backup ---------- */
@@ -1119,6 +1180,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         break;
       case 'lookup': lookup(); break;
       case 'scan': if (scanner) stopScan(); else startScan(); break;
+      case 'capture': captureFrame(); break;
       case 'native-share': if (navigator.share) navigator.share({ text: $('#share-text').value }).catch(function () {}); break;
       case 'export': exportBackup(); break;
       case 'copy': copyShare(t); break;
@@ -1138,6 +1200,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     else if (t.dataset.change === 'range-date') { state[t.id === 'stat-from' ? 'from' : 'to'] = t.value; render(); }
     else if (t.id === 'cover-file') onCoverFile(t);
     else if (t.id === 'import-file') importBackup(t);
+    else if (t.id === 'barcode-photo') { if (t.files && t.files[0]) { stopScan(); readBarcodeImage(t.files[0]); } t.value = ''; }
     else if (t.name === 'dest') syncDest();
   });
   document.addEventListener('submit', function (e) {

@@ -1,7 +1,7 @@
 // Read Between service worker
 // Pages: network first, so new versions show up right away; falls back to the cached copy offline.
 // App files, fonts and the scanner library: served from cache, refreshed in the background.
-const CACHE = 'read-between-v1';
+const CACHE = 'read-between-v2';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const CACHEABLE_HOSTS = /^(fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com|covers\.openlibrary\.org)$/;
 
