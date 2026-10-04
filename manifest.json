@@ -1,66 +1,19 @@
 {
-  "name": "BookTracker - Reading Journey",
-  "short_name": "BookTracker",
-  "description": "Track your reading journey with beautiful analytics and social sharing",
-  "start_url": "/",
+  "name": "Read Between",
+  "short_name": "Read Between",
+  "description": "A reading journal: track the books you have read, plan what is next, and see your reading stats.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f4f6",
-  "theme_color": "#8b5cf6",
   "orientation": "portrait",
-  "scope": "/",
+  "background_color": "#F2EEF4",
+  "theme_color": "#2A2140",
   "icons": [
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=72&h=72&fit=crop",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=96&h=96&fit=crop",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=128&h=128&fit=crop",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=144&h=144&fit=crop",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=152&h=152&fit=crop",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=192&h=192&fit=crop",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=384&h=384&fit=crop",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=512&h=512&fit=crop",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "screenshots": [
-    {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=540&h=720&fit=crop",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "categories": ["books", "education", "lifestyle", "productivity"],
-  "lang": "en-US",
-  "dir": "ltr"
+  "categories": ["books", "lifestyle", "education"],
+  "lang": "en-US"
 }
-      
