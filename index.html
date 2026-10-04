@@ -408,6 +408,30 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 .edit-cover-art .cv-title { font-size: 0.55rem; }
 .edit-cover-art .cv-author { display: none; }
 
+/* ---------- Account ---------- */
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.acct-btn.signed-in { background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; }
+.avatar { position: relative; display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-family: var(--serif); font-style: italic; font-size: 1.1rem; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--gold-soft); }
+.avatar.big { width: 52px; height: 52px; font-size: 1.5rem; flex: none; }
+.avatar .dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: var(--lo); box-shadow: 0 0 0 2px var(--bg); }
+.avatar .dot[data-s="saving"] { background: var(--med); }
+.avatar .dot[data-s="error"] { background: var(--hi); }
+.auth { display: grid; gap: 14px; margin-top: 16px; }
+.google-btn { width: 100%; gap: 10px; padding: 11px 18px; }
+.google-btn svg { width: 18px; height: 18px; }
+.or { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--muted); font-size: 0.78rem; }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.acct-note { margin: 16px 0 0; }
+.acct-who { display: flex; align-items: center; gap: 14px; }
+.acct-who .eyebrow { margin: 0; }
+.acct-email { margin: 2px 0 0; font-family: var(--serif); font-size: 1.15rem; overflow-wrap: anywhere; }
+.sync-line { margin: 16px 0; font-size: 0.88rem; color: var(--muted); }
+.danger-zone { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hair); display: grid; gap: 10px; justify-items: start; }
+.danger-zone h3 { margin: 0; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 1.15rem; }
+.danger-zone p { margin: 0; font-size: 0.9rem; }
+.danger-zone .form { width: 100%; }
+.btn.danger-outline { background: transparent; color: var(--danger); border-color: var(--danger); box-shadow: none; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
@@ -420,7 +444,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 15c-5-4-12-5-18-4v26c6-1 13 0 18 4 5-4 12-5 18-4V11c-6-1-13 0-18 4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M24 15v26" stroke="currentColor" stroke-width="2"/><path d="M11 18c3 0 6 .6 8 1.8M11 23c3 0 6 .6 8 1.8M29 19.8c2-1.2 5-1.8 8-1.8M29 24.8c2-1.2 5-1.8 8-1.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".55"/><path d="M39 1.5l1.3 3.4 3.4 1.3-3.4 1.3L39 10.9l-1.3-3.4-3.4-1.3 3.4-1.3z" fill="var(--gold)"/><path d="M8 3l.8 2 2 .8-2 .8L8 8.6l-.8-2-2-.8 2-.8z" fill="var(--gold)"/></svg>
       <div><h1 class="wordmark">Read <em>Between</em></h1><p class="tagline">A reading journal</p></div>
     </div>
-    <button class="btn hot" data-action="add" data-dest="toread"><span class="plus" aria-hidden="true">+</span> Add a book</button>
+    <div class="top-actions"><button type="button" class="btn sm acct-btn" id="acct-btn" data-action="account">Sign in</button><button class="btn hot" data-action="add" data-dest="toread"><span class="plus" aria-hidden="true">+</span> Add a book</button></div>
   </header>
 
   <section class="hero" id="hero" aria-label="Reading goal"></section>
@@ -436,7 +460,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   <main id="view"></main>
 
   <footer class="foot">
-    <p>Your shelf is saved on this device, in this browser. Export a backup now and then to keep it safe.</p>
+    <p id="foot-note">Your shelf is saved on this device only. Sign in to keep it on every device, or export a backup now and then.</p>
     <div class="actions"><button class="btn sm" data-action="export">Export backup</button><label class="btn sm" for="import-file">Import backup</label><input class="sr" type="file" id="import-file" accept="application/json,.json"></div>
   </footer>
 </div>
@@ -447,6 +471,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="vendor/barcode-detector.js" defer></script>
+<script src="vendor/firebase.js" defer></script>
 <script>
 (function () {
   'use strict';
@@ -526,7 +551,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     } catch (e) {}
     return seed();
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} cloudPush(); }
 
   var data = load();
   if (!data.goal) data.goal = 12;
@@ -826,6 +851,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     $('#banner').innerHTML = bannerHtml();
     var v = state.tab === 'library' ? viewLibrary() : state.tab === 'toread' ? viewToRead() : state.tab === 'recs' ? viewRecs() : viewStats();
     $('#view').innerHTML = v;
+    renderAccountBits();
   }
 
   /* ---------- Toast ---------- */
@@ -852,6 +878,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   function closeModal() {
     stopScan();
     state.detail = null;
+    state.acct = null;
     $('#modal').hidden = true;
     $('#sheet').innerHTML = '';
     pendingImg = null;
@@ -1384,6 +1411,363 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     r.readAsDataURL(file);
   }
 
+  /* ---------- Accounts and sync (Firebase) ---------- */
+  var FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyBJABhTTWNEUKnm1dgpTdhrZV6mbRbrmwc',
+    authDomain: 'read-between-1a275.firebaseapp.com',
+    projectId: 'read-between-1a275',
+    storageBucket: 'read-between-1a275.firebasestorage.app',
+    messagingSenderId: '619241719528',
+    appId: '1:619241719528:web:780a785e20299e29b3ab5d'
+  };
+  var F = null, fbAuth = null, db = null, user = null;
+  var cloud = { ready: false, synced: {}, unsubBooks: null, unsubUser: null, pendingUpload: null, gotServer: false, status: 'idle', writing: 0 };
+
+  // Stable JSON so the same book always compares equal, whatever order its fields arrive in
+  function stableStr(v) {
+    if (Array.isArray(v)) return '[' + v.map(stableStr).join(',') + ']';
+    if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + stableStr(v[k]); }).join(',') + '}';
+    return JSON.stringify(v === undefined ? null : v);
+  }
+  function bookDoc(b, list, order) {
+    var d = JSON.parse(JSON.stringify(b));
+    delete d.sample; delete d.id;
+    d.list = list;
+    d.order = list === 'toread' ? order : 0;
+    return d;
+  }
+  function localDocs() {
+    var m = {};
+    data.library.forEach(function (b) { if (!b.sample) m[b.id] = bookDoc(b, 'library', 0); });
+    data.toread.forEach(function (b, i) { if (!b.sample) m[b.id] = bookDoc(b, 'toread', i); });
+    return m;
+  }
+  function setStatus(s) {
+    cloud.status = s;
+    var dot = $('#acct-dot'); if (dot) dot.dataset.s = s;
+    var line = $('#sync-line'); if (line) line.textContent = statusText();
+  }
+  function statusText() {
+    if (!navigator.onLine) return 'Offline. Your changes are saved on this device and will sync when you reconnect.';
+    if (cloud.status === 'error') return 'Some changes could not sync. They are saved on this device; reopen the app to try again.';
+    if (cloud.status === 'saving' || cloud.writing) return 'Saving to your account…';
+    return 'All changes saved to your account.';
+  }
+
+  // Send whatever changed since the last sync: new or edited books, removed books, the reading goal
+  function cloudPush() {
+    if (!user || !db || !cloud.gotServer) return;
+    var cur = localDocs(), prev = cloud.synced, ops = [];
+    Object.keys(cur).forEach(function (id) { if (prev[id] !== stableStr(cur[id])) ops.push({ t: 'set', id: id, d: cur[id] }); });
+    Object.keys(prev).forEach(function (id) { if (id !== '__user' && !cur[id]) ops.push({ t: 'del', id: id }); });
+    var userDoc = { goal: data.goal || 12 };
+    if (prev.__user !== stableStr(userDoc)) ops.push({ t: 'user', d: userDoc });
+    if (!ops.length) return;
+    ops.forEach(function (op) {
+      if (op.t === 'set') prev[op.id] = stableStr(op.d);
+      else if (op.t === 'del') delete prev[op.id];
+      else prev.__user = stableStr(op.d);
+    });
+    for (var i = 0; i < ops.length; i += 400) {
+      var batch = F.writeBatch(db);
+      ops.slice(i, i + 400).forEach(function (op) {
+        if (op.t === 'set') batch.set(F.doc(db, 'users', user.uid, 'books', op.id), op.d);
+        else if (op.t === 'del') batch.delete(F.doc(db, 'users', user.uid, 'books', op.id));
+        else batch.set(F.doc(db, 'users', user.uid), op.d, { merge: true });
+      });
+      cloud.writing++;
+      setStatus('saving');
+      batch.commit().then(function () {
+        cloud.writing--;
+        if (!cloud.writing) setStatus('synced');
+      }, function (err) {
+        cloud.writing--;
+        setStatus('error');
+        console.warn('[ReadBetween] sync failed', err && err.code);
+      });
+    }
+  }
+
+  function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+
+  function applyServerBooks(snap) {
+    var empty = snap.empty;
+    var trusted = !snap.metadata.fromCache || data.owner === user.uid; // our own cached copy is good enough offline
+    if (snap.metadata.fromCache && empty && data.owner === user.uid && (data.library.length || data.toread.length)) return; // cache not filled yet
+    var lib = [], tr = [], synced = { __user: cloud.synced.__user }, ids = {};
+    snap.forEach(function (d) {
+      var raw = d.data();
+      synced[d.id] = stableStr(raw);
+      ids[d.id] = 1;
+      var b = JSON.parse(JSON.stringify(raw));
+      var list = b.list, order = b.order || 0;
+      delete b.list; delete b.order;
+      b.id = d.id;
+      if (list === 'toread') tr.push({ b: b, o: order }); else lib.push(b);
+    });
+    tr.sort(function (a, b) { return a.o - b.o; });
+    lib.sort(function (a, b) { return (b.dateRead || '').localeCompare(a.dateRead || ''); });
+    var nextLib = lib, nextTr = tr.map(function (x) { return x.b; });
+
+    var uploaded = 0;
+    if (cloud.pendingUpload && !snap.metadata.fromCache) {
+      cloud.pendingUpload.library.forEach(function (b) { if (!ids[b.id]) { nextLib.unshift(b); uploaded++; } });
+      cloud.pendingUpload.toread.forEach(function (b) { if (!ids[b.id]) { nextTr.push(b); uploaded++; } });
+      cloud.pendingUpload = null;
+    }
+    if (trusted) cloud.gotServer = true;
+    cloud.synced = synced;
+
+    var changed = stableStr(nextLib) !== stableStr(data.library) || stableStr(nextTr) !== stableStr(data.toread);
+    data.library = nextLib; data.toread = nextTr; data.owner = user.uid;
+    saveLocal();
+    if (uploaded) { cloudPush(); toast(plural(uploaded, 'book') + ' from this device added to your account'); }
+    if (!snap.metadata.hasPendingWrites && !cloud.writing) setStatus('synced');
+    if (changed) refreshAfterSync();
+  }
+  function applyServerUser(snap) {
+    if (snap.exists()) {
+      var u = snap.data();
+      cloud.synced.__user = stableStr({ goal: u.goal || 12 });
+      if (u.goal && u.goal !== data.goal) { data.goal = u.goal; saveLocal(); refreshAfterSync(); }
+    } else if (cloud.gotServer) cloudPush();
+  }
+  // Redraw without disturbing whatever the person is doing
+  function refreshAfterSync() {
+    var active = document.activeElement;
+    if (active && active.id === 'lib-q') { $('#hero').innerHTML = heroHtml(); $('#lib-grid').innerHTML = libGrid(); return; }
+    render();
+    if (state.detail && !state.detail.editing && !$('#modal').hidden && $('#sheet .detail')) renderDetail();
+  }
+
+  function startSync(u) {
+    if (data.owner && data.owner !== u.uid) { data.library = []; data.toread = []; delete data.owner; }
+    if (!data.owner) {
+      var mine = function (b) { return !b.sample; };
+      var lib = data.library.filter(mine), tr = data.toread.filter(mine);
+      cloud.pendingUpload = (lib.length || tr.length) ? { library: lib, toread: tr } : null;
+      if (!cloud.pendingUpload) { data.library = []; data.toread = []; }
+    }
+    cloud.gotServer = false; cloud.synced = {};
+    setStatus('saving');
+    cloud.unsubBooks = F.onSnapshot(F.collection(db, 'users', u.uid, 'books'), { includeMetadataChanges: true }, applyServerBooks, function (err) {
+      setStatus('error'); console.warn('[ReadBetween] listen failed', err && err.code);
+    });
+    cloud.unsubUser = F.onSnapshot(F.doc(db, 'users', u.uid), applyServerUser, function () {});
+  }
+  function stopSync() {
+    if (cloud.unsubBooks) cloud.unsubBooks();
+    if (cloud.unsubUser) cloud.unsubUser();
+    cloud.unsubBooks = cloud.unsubUser = null;
+    cloud.gotServer = false; cloud.synced = {};
+  }
+
+  function initCloud() {
+    F = window.RBFirebase;
+    if (!F) { renderAccountBits(); return; }
+    try {
+      var app = F.initializeApp(FIREBASE_CONFIG);
+      fbAuth = F.getAuth(app);
+      db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) });
+    } catch (e) {
+      console.warn('[ReadBetween] Firebase failed to start', e);
+      F = null; renderAccountBits(); return;
+    }
+    cloud.ready = true;
+    F.onAuthStateChanged(fbAuth, function (u) {
+      var was = user;
+      user = u;
+      if (u && (!was || was.uid !== u.uid)) startSync(u);
+      if (!u && was) stopSync();
+      renderAccountBits();
+      if (state.acct && !$('#modal').hidden) renderAccount();
+    });
+    window.addEventListener('online', function () { setStatus(cloud.status); });
+    window.addEventListener('offline', function () { setStatus(cloud.status); });
+  }
+
+  /* ---------- Account screen ---------- */
+  function initialOf(u) {
+    var s = (u.displayName || u.email || '?').trim();
+    return s.charAt(0).toUpperCase();
+  }
+  function renderAccountBits() {
+    var btn = $('#acct-btn');
+    if (btn) {
+      if (user) {
+        btn.className = 'acct-btn signed-in';
+        btn.innerHTML = '<span class="avatar" aria-hidden="true">' + esc(initialOf(user)) + '<span class="dot" id="acct-dot" data-s="' + cloud.status + '"></span></span><span class="sr">Your account</span>';
+        btn.setAttribute('aria-label', 'Your account, signed in as ' + (user.email || 'you'));
+      } else {
+        btn.className = 'btn sm acct-btn';
+        btn.textContent = 'Sign in';
+        btn.removeAttribute('aria-label');
+      }
+    }
+    var note = $('#foot-note');
+    if (note) note.textContent = user
+      ? 'Signed in as ' + (user.email || 'you') + '. Your shelf syncs to your account and works offline.'
+      : 'Your shelf is saved on this device only. Sign in to keep it on every device, or export a backup now and then.';
+  }
+  function openAccount() {
+    state.acct = { mode: 'main', err: '', info: '' };
+    openModal('');
+    renderAccount();
+  }
+  function authError(e) {
+    var code = (e && e.code) || '';
+    var map = {
+      'auth/invalid-credential': 'That email and password do not match. Try again, or reset your password.',
+      'auth/wrong-password': 'That email and password do not match. Try again, or reset your password.',
+      'auth/user-not-found': 'No account uses that email. Check it, or create an account.',
+      'auth/email-already-in-use': 'There is already an account with that email. Sign in instead.',
+      'auth/weak-password': 'Use a password with at least 6 characters.',
+      'auth/invalid-email': 'That email address does not look right. Check it and try again.',
+      'auth/missing-password': 'Enter your password.',
+      'auth/popup-blocked': 'Your browser blocked the Google window. Allow pop-ups for this site, or sign in with email.',
+      'auth/network-request-failed': 'You appear to be offline. Connect to the internet and try again.',
+      'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+      'auth/unauthorized-domain': 'Sign-in is not set up for this web address yet.',
+      'auth/requires-recent-login': 'For your security, confirm it is you, then try again.'
+    };
+    return map[code] || 'Something went wrong (' + (code || 'unknown error') + '). Try again.';
+  }
+  function localCount() {
+    return data.library.filter(function (b) { return !b.sample; }).length + data.toread.filter(function (b) { return !b.sample; }).length;
+  }
+  function isGoogleUser() { return !!(user && user.providerData && user.providerData.some(function (p) { return p.providerId === 'google.com'; })); }
+  function renderAccount() {
+    var a = state.acct;
+    if (!a) return;
+    var head = '<div class="sheet-h"><h2 id="sheet-title">Your account</h2><button type="button" class="x" data-action="close-modal" aria-label="Close">×</button></div>';
+    var msg = (a.err ? '<p class="err" role="alert">' + esc(a.err) + '</p>' : '') + (a.info ? '<p class="status" role="status">' + esc(a.info) + '</p>' : '');
+    var html;
+    if (!cloud.ready) {
+      html = head + '<p class="lede">Sign-in is not available right now. Check your connection and reopen the app.</p>';
+    } else if (!user) {
+      var n = localCount();
+      html = head
+        + '<p class="lede">Sign in to keep your shelf on every device. Your books sync on their own and still work offline.</p>'
+        + '<div class="auth">'
+        + '<button type="button" class="btn google-btn" data-action="auth-google"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button>'
+        + '<p class="or"><span>or use email</span></p>'
+        + '<form class="form" id="auth-form" novalidate>'
+        + '<label for="a-email">Email<input class="field" id="a-email" type="email" autocomplete="email" inputmode="email" value="' + esc(a.email || '') + '"></label>'
+        + '<label for="a-pass">Password<input class="field" id="a-pass" type="password" autocomplete="current-password"></label>'
+        + msg
+        + '<div class="actions"><button type="submit" class="btn primary">Sign in</button><button type="button" class="btn" data-action="auth-create">Create account</button></div>'
+        + '<button type="button" class="link" data-action="auth-reset">Forgot your password?</button>'
+        + '</form></div>'
+        + (n ? '<p class="hint acct-note">The ' + plural(n, 'book') + ' on this device will be added to your account when you sign in.</p>' : '');
+    } else if (a.mode === 'delete' || a.mode === 'reauth') {
+      var count = localCount();
+      var needsReauth = a.mode === 'reauth';
+      html = head
+        + '<section class="danger-zone"><h3>Delete your account?</h3>'
+        + '<p>This permanently deletes your account and ' + (count === 1 ? 'the 1 book' : 'all ' + plural(count, 'book')) + ' in it, with ' + (count === 1 ? 'its rating, notes and synopsis' : 'their ratings, notes and synopses') + '. It cannot be undone.</p>'
+        + '<p class="hint">Want a copy first? <button type="button" class="link" data-action="export">Export a backup</button></p>'
+        + (needsReauth
+          ? (isGoogleUser()
+            ? '<p>For your security, confirm it is you first.</p><button type="button" class="btn google-btn" data-action="reauth-google">Confirm with Google</button>'
+            : '<form class="form" id="reauth-form" novalidate><label for="r-pass">For your security, enter your password<input class="field" id="r-pass" type="password" autocomplete="current-password"></label><div class="actions"><button type="submit" class="btn danger">Confirm and delete</button></div></form>')
+          : '')
+        + msg
+        + '<div class="actions">' + (needsReauth ? '' : '<button type="button" class="btn danger" data-action="delete-yes">Delete my account</button>') + '<button type="button" class="btn" data-action="delete-no">Keep my account</button></div>'
+        + '</section>';
+    } else {
+      html = head
+        + '<div class="acct-who"><span class="avatar big" aria-hidden="true">' + esc(initialOf(user)) + '</span><div><p class="eyebrow">Signed in</p><p class="acct-email">' + esc(user.email || user.displayName || 'Your account') + '</p></div></div>'
+        + '<p class="sync-line" id="sync-line" role="status">' + esc(statusText()) + '</p>'
+        + msg
+        + '<div class="actions"><button type="button" class="btn" data-action="sign-out">Sign out</button><button type="button" class="btn" data-action="export">Export backup</button></div>'
+        + '<p class="hint">Signing out removes your books from this device. They stay safe in your account.</p>'
+        + '<section class="danger-zone"><h3>Delete account</h3><p>Permanently delete your account and every book, rating and note in it.</p>'
+        + '<button type="button" class="btn danger-outline" data-action="delete-ask">Delete my account</button></section>';
+    }
+    $('#sheet').innerHTML = html;
+  }
+  function acctMsg(err, info) { if (state.acct) { state.acct.err = err || ''; state.acct.info = info || ''; renderAccount(); } }
+  function readAuthFields() {
+    var email = ($('#a-email') && $('#a-email').value.trim()) || '', pass = ($('#a-pass') && $('#a-pass').value) || '';
+    if (state.acct) state.acct.email = email;
+    return { email: email, pass: pass };
+  }
+  function afterSignIn() {
+    closeModal();
+    state.tab = 'library';
+    render();
+    toast('Signed in. Your shelf now syncs to your account.');
+  }
+  function authGoogle() {
+    F.signInWithPopup(fbAuth, new F.GoogleAuthProvider()).then(afterSignIn, function (e) {
+      if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) return;
+      acctMsg(authError(e));
+    });
+  }
+  function authEmail(create) {
+    var f = readAuthFields();
+    if (!f.email) { acctMsg('Enter your email address.'); return; }
+    if (!f.pass) { acctMsg(create ? 'Choose a password with at least 6 characters.' : 'Enter your password.'); return; }
+    acctMsg('', create ? 'Creating your account…' : 'Signing in…');
+    var p = create ? F.createUserWithEmailAndPassword(fbAuth, f.email, f.pass) : F.signInWithEmailAndPassword(fbAuth, f.email, f.pass);
+    p.then(afterSignIn, function (e) { acctMsg(authError(e)); });
+  }
+  function authReset() {
+    var f = readAuthFields();
+    if (!f.email) { acctMsg('Enter your email address above, then tap Forgot your password again.'); return; }
+    F.sendPasswordResetEmail(fbAuth, f.email).then(function () {
+      acctMsg('', 'If an account uses ' + f.email + ', a reset link is on its way. Check your inbox.');
+    }, function (e) { acctMsg(authError(e)); });
+  }
+  // Wipe this device's copy (books, cached account data) and start fresh
+  function clearDeviceAndReload(message) {
+    try { localStorage.setItem(KEY, JSON.stringify({ library: [], toread: [], goal: 12 })); sessionStorage.setItem('rb-toast', message); } catch (e) {}
+    var done = function () { location.reload(); };
+    var wipe = function () { return F.clearIndexedDbPersistence(db).catch(function () {}); };
+    F.terminate(db).then(wipe, wipe).then(done, done);
+  }
+  function signOutNow() {
+    stopSync();
+    F.signOut(fbAuth).then(function () { clearDeviceAndReload('Signed out. Your books are safe in your account.'); }, function (e) { acctMsg(authError(e)); });
+  }
+  function recentlySignedIn() {
+    var t = Date.parse((user.metadata && user.metadata.lastSignInTime) || '');
+    return t && Date.now() - t < 4 * 60 * 1000;
+  }
+  function deleteAccountNow() {
+    if (!state.acct.reauthed && !recentlySignedIn()) { state.acct.mode = 'reauth'; acctMsg(''); return; }
+    acctMsg('', 'Deleting your books and account…');
+    var uid = user.uid, u = user;
+    stopSync();
+    F.getDocs(F.collection(db, 'users', uid, 'books')).then(function (snap) {
+      var refs = [];
+      snap.forEach(function (d) { refs.push(d.ref); });
+      refs.push(F.doc(db, 'users', uid));
+      var chain = Promise.resolve();
+      for (var i = 0; i < refs.length; i += 400) {
+        (function (part) {
+          chain = chain.then(function () { var b = F.writeBatch(db); part.forEach(function (r) { b.delete(r); }); return b.commit(); });
+        })(refs.slice(i, i + 400));
+      }
+      return chain;
+    }).then(function () {
+      return F.deleteUser(u);
+    }).then(function () {
+      clearDeviceAndReload('Your account and all of its books were deleted.');
+    }, function (e) {
+      if (e && e.code === 'auth/requires-recent-login') { state.acct.mode = 'reauth'; acctMsg(''); startSync(u); return; }
+      acctMsg(authError(e));
+      startSync(u);
+    });
+  }
+  function reauthThenDelete(promise) {
+    acctMsg('', 'Confirming…');
+    promise.then(function () { state.acct.mode = 'delete'; state.acct.reauthed = true; deleteAccountNow(); }, function (e) {
+      if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) { acctMsg(''); return; }
+      acctMsg(authError(e));
+    });
+  }
+
   /* ---------- Backup ---------- */
   function exportBackup() {
     var payload = { app: 'read-between', version: 1, exported: new Date().toISOString(), goal: data.goal, library: data.library, toread: data.toread };
@@ -1403,7 +1787,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         var d = JSON.parse(r.result);
         if (!d || !Array.isArray(d.library) || !Array.isArray(d.toread)) throw new Error('bad');
         var prev = JSON.stringify(data);
-        data = { library: d.library, toread: d.toread, goal: d.goal || data.goal };
+        data = { library: d.library, toread: d.toread, goal: d.goal || data.goal, owner: data.owner };
         save(); state.confirm = null; render();
         toast('Backup restored: ' + plural(data.library.length, 'book'), function () { data = JSON.parse(prev); save(); render(); });
       } catch (e) { toast('That file is not a Read Between backup.'); }
@@ -1577,6 +1961,15 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         if (state.method === 'type') $('#f-title').focus();
         break;
       case 'lookup': lookup(); break;
+      case 'account': openAccount(); break;
+      case 'auth-google': authGoogle(); break;
+      case 'auth-create': authEmail(true); break;
+      case 'auth-reset': authReset(); break;
+      case 'sign-out': signOutNow(); break;
+      case 'delete-ask': state.acct.mode = 'delete'; state.acct.err = state.acct.info = ''; renderAccount(); break;
+      case 'delete-no': state.acct.mode = 'main'; state.acct.err = state.acct.info = ''; renderAccount(); break;
+      case 'delete-yes': deleteAccountNow(); break;
+      case 'reauth-google': reauthThenDelete(F.reauthenticateWithPopup(user, new F.GoogleAuthProvider())); break;
       case 'open-book': if (id && listName) openDetail(listName, id); break;
       case 'detail-edit': state.detail.editing = true; renderDetail(); var et = $('#e-title'); if (et) et.focus(); break;
       case 'detail-view': state.detail.editing = false; state.detail.img = null; state.detail.removeImg = false; state.detail.coverUrl = ''; renderDetail(); break;
@@ -1634,6 +2027,13 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   document.addEventListener('submit', function (e) {
     if (e.target.id === 'add-form') submitAdd(e);
     else if (e.target.id === 'edit-form') saveDetail(e);
+    else if (e.target.id === 'auth-form') { e.preventDefault(); authEmail(false); }
+    else if (e.target.id === 'reauth-form') {
+      e.preventDefault();
+      var pw = $('#r-pass').value;
+      if (!pw) { acctMsg('Enter your password.'); return; }
+      reauthThenDelete(F.reauthenticateWithCredential(user, F.EmailAuthProvider.credential(user.email, pw)));
+    }
     else if (e.target.id === 'goal-form') {
       e.preventDefault();
       var g = parseInt($('#goal-input').value, 10);
@@ -1654,6 +2054,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   }
 
   render();
+  document.addEventListener('DOMContentLoaded', initCloud);
+  try { var pendingToast = sessionStorage.getItem('rb-toast'); if (pendingToast) { sessionStorage.removeItem('rb-toast'); toast(pendingToast); } } catch (e) {}
 })();
 </script>
 </body>
