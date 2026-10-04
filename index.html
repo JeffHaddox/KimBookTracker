@@ -366,6 +366,48 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 .foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
 .foot p { margin: 0; max-width: 60ch; font-family: var(--serif); font-style: italic; }
 
+/* ---------- Book details ---------- */
+.cover-btn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 3px 9px 9px 3px; }
+.cover-btn.sm { width: auto; border-radius: 2px 5px 5px 2px; }
+.title-btn { display: inline; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.title-btn:hover { text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.sheet.wide { max-width: 640px; }
+.detail-top { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 440px) { .detail-top { grid-template-columns: 100px minmax(0, 1fr); gap: 14px; } }
+.detail-cover { position: relative; }
+.detail-cover .cover { padding: 14px 10px 10px 16px; }
+.detail-cover .cover::after { inset: 7px 7px 7px 13px; }
+.detail-cover .cv-title { font-size: 0.95rem; }
+.detail-cover .cv-author { font-size: 0.5rem; }
+.detail-cover .fave { width: 46px; height: 46px; font-size: 0.6rem; top: -10px; right: -6px; }
+.detail-title { font-family: var(--serif); font-weight: 600; font-size: 1.65rem; line-height: 1.12; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+@media (max-width: 440px) { .detail-title { font-size: 1.3rem; } }
+.detail-meta { display: grid; gap: 8px; min-width: 0; }
+.detail-meta .author { margin: 0; }
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 6px 0 0; font-size: 0.86rem; align-items: center; }
+.facts dt { color: var(--muted); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.facts .star { font-size: 1.15rem; }
+@media (max-width: 440px) { .facts { grid-template-columns: minmax(0, 1fr); gap: 1px; } .facts dd { margin-bottom: 7px; } }
+.num { font-variant-numeric: tabular-nums; }
+.syn { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hair); }
+.syn h3 { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 1.2rem; margin: 0 0 8px; }
+.syn-text { font-size: 0.95rem; line-height: 1.68; max-width: 62ch; }
+.syn-text p { margin: 0 0 0.8em; }
+.syn-text p:last-child { margin-bottom: 0; }
+.syn-text.clamp { max-height: calc(1.68em * 8); overflow: hidden; -webkit-mask-image: linear-gradient(#000 65%, transparent); mask-image: linear-gradient(#000 65%, transparent); }
+.syn-source { margin: 6px 0 0; font-size: 0.74rem; color: var(--muted); letter-spacing: 0.02em; }
+.link { background: none; border: 0; padding: 0; margin-top: 4px; color: var(--accent); font-weight: 600; font-size: 0.86rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.detail-actions { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hair); }
+.confirm-line { margin: 0; width: 100%; font-family: var(--serif); font-style: italic; font-size: 1.02rem; }
+.edit-cover { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.edit-cover-art { width: 72px; flex: none; }
+.edit-cover-art img { display: block; width: 100%; border-radius: 3px 6px 6px 3px; box-shadow: 0 8px 16px -10px var(--shadow-2); }
+.edit-cover-art .cover { padding: 7px 5px 6px 10px; }
+.edit-cover-art .cover::after { inset: 4px 4px 4px 8px; box-shadow: none; }
+.edit-cover-art .cv-title { font-size: 0.55rem; }
+.edit-cover-art .cv-author { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
@@ -378,7 +420,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 15c-5-4-12-5-18-4v26c6-1 13 0 18 4 5-4 12-5 18-4V11c-6-1-13 0-18 4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M24 15v26" stroke="currentColor" stroke-width="2"/><path d="M11 18c3 0 6 .6 8 1.8M11 23c3 0 6 .6 8 1.8M29 19.8c2-1.2 5-1.8 8-1.8M29 24.8c2-1.2 5-1.8 8-1.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".55"/><path d="M39 1.5l1.3 3.4 3.4 1.3-3.4 1.3L39 10.9l-1.3-3.4-3.4-1.3 3.4-1.3z" fill="var(--gold)"/><path d="M8 3l.8 2 2 .8-2 .8L8 8.6l-.8-2-2-.8 2-.8z" fill="var(--gold)"/></svg>
       <div><h1 class="wordmark">Read <em>Between</em></h1><p class="tagline">A reading journal</p></div>
     </div>
-    <button class="btn hot" data-action="add" data-dest="library"><span class="plus" aria-hidden="true">+</span> Add a book</button>
+    <button class="btn hot" data-action="add" data-dest="toread"><span class="plus" aria-hidden="true">+</span> Add a book</button>
   </header>
 
   <section class="hero" id="hero" aria-label="Reading goal"></section>
@@ -623,8 +665,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   function bookCard(b) {
     return '<article class="book" data-id="' + b.id + '" data-list="library">'
       + (b.rating === 5 ? '<span class="fave" aria-label="Favorite">Beloved</span>' : '')
-      + cover(b)
-      + '<div><h3>' + esc(b.title) + '</h3><p class="author">' + esc(b.author) + '</p></div>'
+      + '<button type="button" class="cover-btn" data-action="open-book" aria-label="Open details for ' + esc(b.title) + '">' + cover(b) + '</button>'
+      + '<div><h3><button type="button" class="title-btn" data-action="open-book">' + esc(b.title) + '</button></h3><p class="author">' + esc(b.author) + '</p></div>'
       + chips(b) + starsHtml(b.rating || 0, true)
       + '<p class="date">' + (b.dateRead ? 'Finished ' + fmtDate(b.dateRead) : 'No finish date') + '</p>'
       + '<div class="actions"><button class="btn sm" data-action="share-book">Share</button><button class="btn sm ghost" data-action="ask-delete">Remove</button></div>'
@@ -641,8 +683,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   }
   function trItem(b, i) {
     var n = data.toread.length;
-    return '<li class="tr" data-id="' + b.id + '" data-list="toread"><span class="pos"><small>No.</small>' + (i + 1) + '</span>' + cover(b, 'sm')
-      + '<div class="tr-main"><h3>' + esc(b.title) + '</h3><p class="author">' + esc(b.author) + '</p>' + chips(b) + '</div>'
+    return '<li class="tr" data-id="' + b.id + '" data-list="toread"><span class="pos"><small>No.</small>' + (i + 1) + '</span>' + '<button type="button" class="cover-btn sm" data-action="open-book" aria-label="Open details for ' + esc(b.title) + '">' + cover(b, 'sm') + '</button>'
+      + '<div class="tr-main"><h3><button type="button" class="title-btn" data-action="open-book">' + esc(b.title) + '</button></h3><p class="author">' + esc(b.author) + '</p>' + chips(b) + '</div>'
       + '<div class="controls"><label class="prio" data-p="' + b.priority + '"><span class="sr">Priority for ' + esc(b.title) + '</span><select class="field sm" id="prio-' + b.id + '" data-change="priority">'
       + ['high', 'medium', 'low'].map(function (p) { return '<option value="' + p + '"' + (p === b.priority ? ' selected' : '') + '>' + cap(p) + '</option>'; }).join('') + '</select></label>'
       + '<button class="btn sm icon" data-action="up" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>↑</button>'
@@ -799,8 +841,9 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 
   /* ---------- Modal ---------- */
   var lastFocus = null;
-  function openModal(html) {
+  function openModal(html, cls) {
     lastFocus = document.activeElement;
+    $('#sheet').className = 'sheet' + (cls ? ' ' + cls : '');
     $('#sheet').innerHTML = html;
     $('#modal').hidden = false;
     var f = $('#sheet').querySelector('input:not(.sr), button.method[aria-pressed="true"], button');
@@ -808,6 +851,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
   }
   function closeModal() {
     stopScan();
+    state.detail = null;
     $('#modal').hidden = true;
     $('#sheet').innerHTML = '';
     pendingImg = null;
@@ -833,8 +877,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     return '';
   }
   function openAdd(dest) {
-    state.method = dest === 'toread' ? 'type' : 'scan';
-    state.isbn = ''; state.coverUrl = '';
+    state.method = 'scan';
+    state.isbn = ''; state.coverUrl = ''; state.synopsis = '';
     pendingImg = null;
     var gl = GENRES.map(function (g) { return '<option value="' + esc(g) + '"></option>'; }).join('');
     openModal('<div class="sheet-h"><h2 id="sheet-title">Add a book</h2><button class="x" data-action="close-modal" aria-label="Close">×</button></div>'
@@ -884,7 +928,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
           author: (vi.authors || []).join(', '),
           pages: vi.pageCount || vi.printedPageCount || 0,
           subjects: (vi.categories || []).concat((item.volumeInfo && item.volumeInfo.categories) || []),
-          coverUrl: img ? img.replace(/^http:/, 'https:').replace('&edge=curl', '') : ''
+          coverUrl: img ? img.replace(/^http:/, 'https:').replace('&edge=curl', '') : '',
+          synopsis: vi.description ? stripHtml(vi.description) : ''
         };
       });
     });
@@ -932,7 +977,8 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
           author: first('author', [g, ob, os]),
           pages: first('pages', [g, ob, os]),
           genre: (g && mapGenre(g.subjects)) || (ob && mapGenre(ob.subjects)) || (os && mapGenre(os.subjects)) || mapGenre(subjects),
-          coverUrl: first('coverUrl', [os, ob, g])
+          coverUrl: first('coverUrl', [os, ob, g]),
+          synopsis: (g && g.synopsis) || ''
         }
       };
     });
@@ -947,7 +993,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     var input = $('#isbn'), msg = $('#lookup-msg');
     var v = ((input && input.value) || '').replace(/[^0-9Xx]/g, '').toUpperCase();
     if (v.length !== 10 && v.length !== 13) { msg.textContent = 'ISBNs have 10 or 13 digits. Check the number under the barcode.'; return; }
-    state.isbn = v; state.coverUrl = '';
+    state.isbn = v; state.coverUrl = ''; state.synopsis = '';
     msg.textContent = 'Looking up ' + v + '…';
     lookupAll(v).then(function (res) {
       if (!document.body.contains(msg)) return;
@@ -961,6 +1007,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       }
       fillForm(b);
       state.coverUrl = b.coverUrl || '';
+      state.synopsis = b.synopsis || '';
       var missing = [];
       if (!b.author) missing.push(['author', '#f-author']);
       if (!b.genre) missing.push(['genre', '#f-genre']);
@@ -1113,6 +1160,230 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     img.src = url;
   }
 
+  /* ---------- Book details ---------- */
+  function paras(text) {
+    return String(text || '').split(/\n{2,}/).map(function (p) { return p.trim(); }).filter(Boolean)
+      .map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
+  }
+  function stripHtml(html) {
+    var withBreaks = String(html || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n');
+    var text = new DOMParser().parseFromString(withBreaks, 'text/html').body.textContent || '';
+    return text.replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function cleanOL(desc) {
+    var t = typeof desc === 'string' ? desc : (desc && desc.value) || '';
+    t = t.split(/\n\s*-{3,}/)[0];
+    t = t.replace(/\(\[source\]\[\d+\]\)/gi, '').replace(/\[([^\]]+)\]\[\d+\]/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    return t.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function googleDesc(q) {
+    return fetchJSON('https://www.googleapis.com/books/v1/volumes?maxResults=5&q=' + encodeURIComponent(q)).then(function (d) {
+      var items = (d && d.items) || [];
+      if (!items.length) return '';
+      var pick = items.filter(function (it) { return it.volumeInfo && it.volumeInfo.description; })[0] || items[0];
+      return fetchJSON('https://www.googleapis.com/books/v1/volumes/' + pick.id).catch(function () { return null; }).then(function (full) {
+        var desc = (full && full.volumeInfo && full.volumeInfo.description) || (pick.volumeInfo && pick.volumeInfo.description) || '';
+        return desc ? stripHtml(desc) : '';
+      });
+    });
+  }
+  function titleQuery(b) { return 'intitle:"' + b.title + '"' + (b.author ? ' inauthor:"' + b.author.split(',')[0].trim() + '"' : ''); }
+  function synFromGoogle(b) {
+    var isbn = isbnFor(b);
+    var byTitle = function () { return googleDesc(titleQuery(b)); };
+    return isbn ? googleDesc('isbn:' + isbn).then(function (t) { return t || byTitle(); }) : byTitle();
+  }
+  function olWorkKey(url) {
+    return fetchJSON(url).then(function (d) { var doc = d && d.docs && d.docs[0]; return doc ? doc.key : ''; });
+  }
+  function synFromOL(b) {
+    var isbn = isbnFor(b);
+    var byTitle = function () {
+      return olWorkKey('https://openlibrary.org/search.json?fields=key&limit=1&title=' + encodeURIComponent(b.title) + (b.author ? '&author=' + encodeURIComponent(b.author.split(',')[0].trim()) : ''));
+    };
+    var key = isbn ? olWorkKey('https://openlibrary.org/search.json?fields=key&limit=1&isbn=' + isbn).then(function (k) { return k || byTitle(); }) : byTitle();
+    return key.then(function (k) {
+      if (!k) return '';
+      return fetchJSON('https://openlibrary.org' + k + '.json').then(function (w) { return w ? cleanOL(w.description) : ''; });
+    });
+  }
+  function fetchSynopsis(b) {
+    var failures = 0;
+    return synFromGoogle(b).catch(function () { failures++; return ''; }).then(function (t) {
+      if (t && t.length > 40) return { text: t, source: 'Google Books' };
+      return synFromOL(b).catch(function () { failures++; return ''; }).then(function (t2) {
+        if (t2 && t2.length > 40) return { text: t2, source: 'Open Library' };
+        if (failures === 2) throw new Error('offline');
+        return { text: '' };
+      });
+    });
+  }
+  function synHtml(b) {
+    if (b.synopsis) {
+      return '<div class="syn-text clamp" id="syn-text">' + paras(b.synopsis) + '</div>'
+        + '<button type="button" class="link" data-action="syn-more" hidden>Read more</button>'
+        + '<p class="syn-source">' + (b.synopsisSource ? 'Summary from ' + esc(b.synopsisSource) : 'Your summary') + '</p>';
+    }
+    if (b.synopsisChecked) return '<p class="none">No summary found for this book. You can add your own with Edit details.</p>';
+    return '<p class="none">Looking for a summary…</p>';
+  }
+  // Show "Read more" only when the synopsis is taller than the preview
+  function fitSynopsis() {
+    var el = $('#syn-text'), btn = $('#sheet [data-action="syn-more"]');
+    if (!el) return;
+    if (el.scrollHeight > el.clientHeight + 12) { if (btn) btn.hidden = false; }
+    else el.classList.remove('clamp');
+  }
+  function maybeFetchSynopsis(b) {
+    var d = state.detail;
+    if (!d || b.synopsis || b.synopsisChecked || d.fetching === b.id) return;
+    d.fetching = b.id;
+    var show = function (html) {
+      if (state.detail && state.detail.id === b.id && !state.detail.editing && $('#syn')) { $('#syn').innerHTML = html; fitSynopsis(); }
+    };
+    fetchSynopsis(b).then(function (r) {
+      if (state.detail) state.detail.fetching = null;
+      if (r.text) { b.synopsis = r.text; b.synopsisSource = r.source; } else b.synopsisChecked = true;
+      save();
+      show(synHtml(b));
+    }, function () {
+      if (state.detail) state.detail.fetching = null;
+      show('<p class="none">Could not reach the book databases for a summary.</p><button type="button" class="btn sm" data-action="syn-retry">Try again</button>');
+    });
+  }
+  function openDetail(list, id) {
+    state.detail = { list: list, id: id, editing: false, confirm: false, img: null, removeImg: false, coverUrl: '', fetching: null };
+    openModal('', 'wide');
+    renderDetail();
+    var x = $('#sheet .x'); if (x) x.focus();
+  }
+  function renderDetail() {
+    var d = state.detail;
+    var b = d && find(data[d.list], d.id);
+    if (!b) { closeModal(); return; }
+    $('#sheet').innerHTML = d.editing ? detailEditHtml(b, d.list) : detailViewHtml(b, d.list);
+    if (!d.editing) { fitSynopsis(); maybeFetchSynopsis(b); }
+  }
+  function detailHead(label) {
+    return '<div class="sheet-h"><p class="eyebrow">' + label + '</p><button type="button" class="x" data-action="close-modal" aria-label="Close">×</button></div>';
+  }
+  function detailViewHtml(b, list) {
+    var isLib = list === 'library', d = state.detail, facts = '';
+    if (isLib) {
+      facts += '<dt>Finished</dt><dd>' + (b.dateRead ? fmtDate(b.dateRead) : 'No date') + '</dd>'
+        + '<dt>Your rating</dt><dd>' + starsHtml(b.rating || 0, true) + '</dd>';
+    } else {
+      facts += '<dt>Priority</dt><dd><span class="prio" data-p="' + esc(b.priority || 'medium') + '">' + cap(b.priority || 'medium') + '</span></dd>'
+        + '<dt>Up next</dt><dd>No. ' + (data.toread.indexOf(b) + 1) + ' of ' + data.toread.length + '</dd>';
+    }
+    if (b.pages) facts += '<dt>Pages</dt><dd class="num">' + fmtN(b.pages) + '</dd>';
+    var isbn = isbnFor(b);
+    if (isbn) facts += '<dt>ISBN</dt><dd class="num">' + esc(isbn) + '</dd>';
+    var actions = d.confirm
+      ? '<p class="confirm-line">Remove this book from your ' + (isLib ? 'library' : 'To Read list') + '?</p><button type="button" class="btn sm danger" data-action="detail-remove-yes">Remove</button><button type="button" class="btn sm" data-action="detail-remove-no">Keep</button>'
+      : '<button type="button" class="btn primary" data-action="detail-edit">Edit details</button>'
+        + (isLib ? '<button type="button" class="btn" data-action="share-book">Share</button>' : '<button type="button" class="btn hot" data-action="finish">Finished it!</button>')
+        + '<button type="button" class="btn ghost" data-action="detail-remove">Remove</button>';
+    return detailHead(isLib ? 'In your Library' : 'On your To Read list')
+      + '<div class="detail" data-id="' + b.id + '" data-list="' + list + '">'
+      + '<div class="detail-top"><div class="detail-cover">' + (isLib && b.rating === 5 ? '<span class="fave" aria-label="Favorite">Beloved</span>' : '') + cover(b) + '</div>'
+      + '<div class="detail-meta"><h2 class="detail-title" id="sheet-title">' + esc(b.title) + '</h2><p class="author">by ' + esc(b.author) + '</p>' + chips(b)
+      + '<dl class="facts">' + facts + '</dl></div></div>'
+      + '<section class="syn"><h3>Synopsis</h3><div id="syn">' + synHtml(b) + '</div></section>'
+      + (b.notes ? '<section class="syn"><h3>Your notes</h3><div class="syn-text">' + paras(b.notes) + '</div></section>' : '')
+      + '<div class="actions detail-actions">' + actions + '</div></div>';
+  }
+  function detailEditHtml(b, list) {
+    var isLib = list === 'library', d = state.detail;
+    var art = d.img ? '<img src="' + d.img + '" alt="New cover photo">'
+      : (b.img && !d.removeImg ? '<img src="' + b.img + '" alt="Current cover photo">' : cover(b.img ? Object.assign({}, b, { img: '' }) : b));
+    var hasPhoto = (d.img || b.img) && !d.removeImg;
+    var gl = GENRES.map(function (g) { return '<option value="' + esc(g) + '"></option>'; }).join('');
+    return detailHead('Edit details')
+      + '<form class="form detail" id="edit-form" data-id="' + b.id + '" data-list="' + list + '" novalidate>'
+      + '<h2 class="sr" id="sheet-title">Edit ' + esc(b.title) + '</h2>'
+      + '<div class="edit-cover"><div class="edit-cover-art" id="edit-cover-art">' + art + '</div><div class="actions">'
+      + '<label class="btn sm" for="edit-cover">Change cover photo</label><input class="sr" type="file" id="edit-cover" accept="image/*">'
+      + (hasPhoto ? '<button type="button" class="btn sm ghost" data-action="edit-cover-remove">Use the standard cover</button>' : '') + '</div></div>'
+      + '<label for="e-title">Title<input class="field" id="e-title" value="' + esc(b.title) + '" autocomplete="off"></label>'
+      + '<label for="e-author">Author<input class="field" id="e-author" value="' + esc(b.author) + '" autocomplete="off"></label>'
+      + '<div class="two"><label for="e-genre">Genre<input class="field" id="e-genre" list="e-genre-list" value="' + esc(b.genre || '') + '"><datalist id="e-genre-list">' + gl + '</datalist></label>'
+      + '<label for="e-pages">Pages<input class="field" id="e-pages" type="number" min="0" inputmode="numeric" value="' + (b.pages || '') + '"></label></div>'
+      + '<label for="e-isbn">ISBN<input class="field" id="e-isbn" inputmode="numeric" autocomplete="off" value="' + esc(b.isbn || isbnFor(b) || '') + '"></label>'
+      + (isLib
+        ? '<div class="two"><label for="e-date">Finished on<input class="field" id="e-date" type="date" value="' + esc(b.dateRead || '') + '"></label>'
+          + '<label for="e-rating">Your rating<select class="field" id="e-rating"><option value="0">Not rated</option>' + [5, 4, 3, 2, 1].map(function (n) { return '<option value="' + n + '"' + (n === b.rating ? ' selected' : '') + '>' + stars(n) + '</option>'; }).join('') + '</select></label></div>'
+        : '<label for="e-prio">Priority<select class="field" id="e-prio">' + ['high', 'medium', 'low'].map(function (p) { return '<option value="' + p + '"' + (p === b.priority ? ' selected' : '') + '>' + cap(p) + '</option>'; }).join('') + '</select></label>')
+      + '<label for="e-syn">Synopsis<textarea class="field" id="e-syn" rows="6" placeholder="What the book is about">' + esc(b.synopsis || '') + '</textarea></label>'
+      + '<label for="e-notes">Your notes<textarea class="field" id="e-notes" rows="4" placeholder="Favorite lines, who recommended it, what you thought">' + esc(b.notes || '') + '</textarea></label>'
+      + '<p class="err" id="edit-err" role="alert"></p><p class="status" id="fill-msg" role="status"></p>'
+      + '<div class="actions"><button type="submit" class="btn primary">Save changes</button><button type="button" class="btn" data-action="detail-view">Cancel</button>'
+      + '<button type="button" class="btn ghost" data-action="detail-fill">Fill blanks from ISBN</button></div>'
+      + '</form>';
+  }
+  function fillBlanksFromIsbn() {
+    var msg = $('#fill-msg');
+    var v = $('#e-isbn').value.replace(/[^0-9Xx]/g, '').toUpperCase();
+    if (v.length !== 10 && v.length !== 13) { msg.textContent = 'Add a 10 or 13 digit ISBN first.'; $('#e-isbn').focus(); return; }
+    msg.textContent = 'Looking up ' + v + '…';
+    lookupAll(v).then(function (res) {
+      if (!document.body.contains(msg)) return;
+      var b = res.book;
+      if (!b) { msg.textContent = res.offline ? 'Could not reach the book databases. Try again later.' : 'No match for ' + v + '.'; return; }
+      var filled = [];
+      [['#e-title', b.title, 'title'], ['#e-author', b.author, 'author'], ['#e-genre', b.genre, 'genre'], ['#e-pages', b.pages, 'pages'], ['#e-syn', b.synopsis, 'synopsis']].forEach(function (f) {
+        var el = $(f[0]);
+        if (el && !el.value.trim() && f[1]) { el.value = f[1]; filled.push(f[2]); }
+      });
+      if (b.coverUrl) state.detail.coverUrl = b.coverUrl;
+      msg.textContent = filled.length ? 'Filled in: ' + filled.join(', ') + '. Save to keep them.' : 'Nothing new to add. Every field already has a value.';
+    });
+  }
+  function saveDetail(e) {
+    e.preventDefault();
+    var d = state.detail, b = d && find(data[d.list], d.id), err = $('#edit-err');
+    if (!b) { closeModal(); return; }
+    var title = $('#e-title').value.trim(), author = $('#e-author').value.trim();
+    if (!title || !author) { err.textContent = 'Add a title and an author to save.'; (title ? $('#e-author') : $('#e-title')).focus(); return; }
+    var isbn = $('#e-isbn').value.replace(/[^0-9Xx]/g, '').toUpperCase();
+    if (isbn && isbn.length !== 10 && isbn.length !== 13) { err.textContent = 'ISBNs have 10 or 13 digits. Fix it or clear the field.'; $('#e-isbn').focus(); return; }
+    if (isbn !== isbnFor(b)) delete b.coverUrl;
+    b.title = title; b.author = author;
+    b.genre = $('#e-genre').value.trim() || 'Other';
+    b.pages = parseInt($('#e-pages').value, 10) || 0;
+    if (isbn) b.isbn = isbn; else delete b.isbn;
+    if (d.coverUrl) b.coverUrl = d.coverUrl;
+    if (d.list === 'library') { b.dateRead = $('#e-date').value || b.dateRead; b.rating = +$('#e-rating').value || 0; }
+    else b.priority = $('#e-prio').value;
+    var syn = $('#e-syn').value.trim();
+    if (syn !== (b.synopsis || '').trim()) {
+      if (syn) { b.synopsis = syn; b.synopsisSource = ''; }
+      else { delete b.synopsis; delete b.synopsisSource; b.synopsisChecked = true; }
+    }
+    var notes = $('#e-notes').value.trim();
+    if (notes) b.notes = notes; else delete b.notes;
+    if (d.img) b.img = d.img; else if (d.removeImg) delete b.img;
+    save();
+    d.editing = false; d.img = null; d.removeImg = false; d.coverUrl = '';
+    render(); renderDetail();
+    toast('Saved');
+  }
+  function readCoverFile(file, done) {
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var w = 300, h = Math.round(img.height * (w / img.width));
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        try { done(c.toDataURL('image/jpeg', 0.8)); } catch (e) { done(r.result); }
+      };
+      img.onerror = function () { done(null); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+
   /* ---------- Backup ---------- */
   function exportBackup() {
     var payload = { app: 'read-between', version: 1, exported: new Date().toISOString(), goal: data.goal, library: data.library, toread: data.toread };
@@ -1179,6 +1450,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     if (pendingImg) b.img = pendingImg;
     if (state.isbn) b.isbn = state.isbn;
     if (state.coverUrl && !pendingImg) b.coverUrl = state.coverUrl;
+    if (state.synopsis) { b.synopsis = state.synopsis; b.synopsisSource = 'Google Books'; }
     if (toread) { b.priority = $('#f-prio').value; data.toread.push(b); }
     else { b.dateRead = $('#f-date').value || iso(new Date()); b.rating = +$('#f-rating').value || 0; data.library.unshift(b); }
     save();
@@ -1238,8 +1510,10 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         b = find(data.library, id); if (!b) break;
         var v = +t.dataset.v; b.rating = b.rating === v ? 0 : v; save();
         pt = pointOf(e, t);
-        $('#lib-grid').innerHTML = libGrid();
-        var star = document.querySelector('#lib-grid [data-id="' + id + '"] .star[data-v="' + v + '"]');
+        var inSheet = !!t.closest('#sheet');
+        if ($('#lib-grid')) $('#lib-grid').innerHTML = libGrid();
+        if (inSheet) renderDetail();
+        var star = document.querySelector((inSheet ? '#sheet' : '#lib-grid') + ' [data-id="' + id + '"] .star[data-v="' + v + '"]');
         if (star && b.rating) { star.classList.add('pop'); star.focus(); }
         if (b.rating === 5) confetti(pt[0], pt[1]);
         break;
@@ -1266,6 +1540,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         i = data.toread.findIndex(function (x) { return x.id === id; });
         if (i > -1) {
           pt = pointOf(e, t);
+          if (t.closest('#sheet')) closeModal();
           b = data.toread.splice(i, 1)[0];
           delete b.priority; b.dateRead = iso(new Date()); b.rating = 0;
           data.library.unshift(b); save(); render();
@@ -1302,6 +1577,27 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         if (state.method === 'type') $('#f-title').focus();
         break;
       case 'lookup': lookup(); break;
+      case 'open-book': if (id && listName) openDetail(listName, id); break;
+      case 'detail-edit': state.detail.editing = true; renderDetail(); var et = $('#e-title'); if (et) et.focus(); break;
+      case 'detail-view': state.detail.editing = false; state.detail.img = null; state.detail.removeImg = false; state.detail.coverUrl = ''; renderDetail(); break;
+      case 'detail-remove': state.detail.confirm = true; renderDetail(); break;
+      case 'detail-remove-no': state.detail.confirm = false; renderDetail(); break;
+      case 'detail-remove-yes':
+        i = list ? list.findIndex(function (x) { return x.id === id; }) : -1;
+        if (i > -1) { lastRemoved = { list: listName, item: list[i], index: i }; list.splice(i, 1); save(); }
+        closeModal(); render();
+        if (lastRemoved) toast('Removed ' + lastRemoved.item.title, undoRemove);
+        break;
+      case 'syn-more':
+        var st = $('#syn-text');
+        if (st) { st.classList.toggle('clamp'); t.textContent = st.classList.contains('clamp') ? 'Read more' : 'Show less'; }
+        break;
+      case 'syn-retry': renderDetail(); break;
+      case 'detail-fill': fillBlanksFromIsbn(); break;
+      case 'edit-cover-remove':
+        b = state.detail && find(data[state.detail.list], state.detail.id);
+        if (b) { state.detail.removeImg = true; state.detail.img = null; $('#edit-cover-art').innerHTML = cover(Object.assign({}, b, { img: '' })); t.remove(); }
+        break;
       case 'scan': if ($('#reader') && !$('#reader').hidden) stopScan(); else startScan(); break;
       case 'capture': captureFrame(); break;
       case 'native-share': if (navigator.share) navigator.share({ text: $('#share-text').value }).catch(function () {}); break;
@@ -1323,11 +1619,21 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
     else if (t.dataset.change === 'range-date') { state[t.id === 'stat-from' ? 'from' : 'to'] = t.value; render(); }
     else if (t.id === 'cover-file') onCoverFile(t);
     else if (t.id === 'import-file') importBackup(t);
+    else if (t.id === 'edit-cover') {
+      var cf = t.files && t.files[0];
+      if (cf && state.detail) readCoverFile(cf, function (url) {
+        if (!url) { $('#edit-err').textContent = 'That file could not be read as an image. Try a JPG or PNG.'; return; }
+        state.detail.img = url; state.detail.removeImg = false;
+        $('#edit-cover-art').innerHTML = '<img src="' + url + '" alt="New cover photo">';
+      });
+      t.value = '';
+    }
     else if (t.id === 'barcode-photo') { if (t.files && t.files[0]) { stopScan(); readBarcodeImage(t.files[0]); } t.value = ''; }
     else if (t.name === 'dest') syncDest();
   });
   document.addEventListener('submit', function (e) {
     if (e.target.id === 'add-form') submitAdd(e);
+    else if (e.target.id === 'edit-form') saveDetail(e);
     else if (e.target.id === 'goal-form') {
       e.preventDefault();
       var g = parseInt($('#goal-input').value, 10);
