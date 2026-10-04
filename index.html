@@ -316,7 +316,9 @@ td .star { font-size: 0.85rem; }
 .note { background: var(--surface-2); border-radius: 16px; padding: 14px; margin-bottom: 16px; font-size: 0.86rem; display: grid; gap: 8px; }
 .note p { margin: 0; }
 .inline { display: flex; gap: 8px; }
-.inline .field { flex: 1; }
+.inline .field { flex: 1 1 auto; min-width: 0; width: 100%; }
+.note > *, .two > *, .form > * { min-width: 0; }
+.form .field { width: 100%; min-width: 0; }
 .hint { color: var(--muted); font-size: 0.8rem; }
 .status { font-family: var(--serif); font-style: italic; min-height: 1.2em; }
 .preview { display: flex; align-items: center; gap: 10px; font-size: 0.84rem; }
@@ -356,8 +358,11 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 .toast:not(:has(.toast-btn)) { padding-right: 20px; }
 .confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 80; }
 
-.reader { width: 100%; min-height: 200px; border-radius: 14px; overflow: hidden; background: #000; }
-.reader video { width: 100% !important; height: auto !important; display: block; }
+.reader { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #000; }
+.reader video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.aim { position: absolute; left: 5%; right: 5%; top: 30%; bottom: 30%; border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 10px; box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.38); }
+.aim span { position: absolute; left: 8px; right: 8px; top: 50%; height: 2px; background: #D8B45A; box-shadow: 0 0 10px #D8B45A; animation: sweep 1.4s ease-in-out infinite alternate; }
+@keyframes sweep { from { transform: translateY(-22px); } to { transform: translateY(22px); } }
 .foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
 .foot p { margin: 0; max-width: 60ch; font-family: var(--serif); font-style: italic; }
 
@@ -399,7 +404,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+<script src="vendor/barcode-detector.js" defer></script>
 <script>
 (function () {
   'use strict';
@@ -820,7 +825,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       + '<button type="button" class="btn" data-action="scan" id="scan-btn">Live scan</button></div>'
       + '<div id="reader" class="reader" hidden></div>'
       + '<button type="button" class="btn hot" data-action="capture" id="capture-btn" style="justify-self:center" hidden>Capture</button>'
-      + '<div id="reader-file" hidden></div>'
+      + ''
       + '<div class="inline"><label class="sr" for="isbn">ISBN</label><input class="field" id="isbn" inputmode="numeric" autocomplete="off" placeholder="978…"><button type="button" class="btn" data-action="lookup">Look up</button></div>'
       + '<p class="status" id="lookup-msg" role="status"></p></div>';
     if (state.method === 'photo') return '<div class="note"><label class="btn" for="cover-file" style="justify-self:start">Take or choose a cover photo</label><input class="sr" type="file" id="cover-file" accept="image/*" capture="environment">'
@@ -848,6 +853,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       + '<p class="err" id="add-err" role="alert"></p>'
       + '<button type="submit" class="btn hot" id="add-submit">' + (dest === 'toread' ? 'Add to To Read' : 'Add to Library') + '</button>'
       + '</form>');
+    warmUpScanner();
   }
   function fetchJSON(url) {
     var ctl = window.AbortController ? new AbortController() : null;
@@ -856,138 +862,255 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
       function (r) { clearTimeout(timer); return r.ok ? r.json() : null; },
       function (e) { clearTimeout(timer); throw e; });
   }
-  var GENRE_RULES = [['science fiction', 'Science Fiction'], ['sci-fi', 'Science Fiction'], ['fantasy', 'Fantasy'], ['mystery', 'Mystery'], ['detective', 'Mystery'], ['thriller', 'Thriller'], ['suspense', 'Thriller'], ['romance', 'Romance'], ['western', 'Western'], ['historical', 'Historical'], ['memoir', 'Memoir'], ['autobiography', 'Memoir'], ['biography', 'Biography'], ['self-help', 'Self-Help'], ['self help', 'Self-Help'], ['business', 'Business'], ['economics', 'Business'], ['religion', 'Faith'], ['christian', 'Faith'], ['bible', 'Faith'], ['poetry', 'Poetry'], ['history', 'History'], ['fiction', 'Fiction']];
+  var GENRE_RULES = [['science fiction', 'Science Fiction'], ['sci-fi', 'Science Fiction'], ['fantasy', 'Fantasy'], ['mystery', 'Mystery'], ['detective', 'Mystery'], ['thriller', 'Thriller'], ['suspense', 'Thriller'], ['romance', 'Romance'], ['western', 'Western'], ['historical', 'Historical'], ['memoir', 'Memoir'], ['autobiography', 'Memoir'], ['biography', 'Biography'], ['self-help', 'Self-Help'], ['self help', 'Self-Help'], ['business', 'Business'], ['economics', 'Business'], ['religion', 'Faith'], ['christian', 'Faith'], ['bible', 'Faith'], ['poetry', 'Poetry'], ['history', 'History'], ['horror', 'Thriller'], ['literary', 'Fiction'], ['novel', 'Fiction'], ['fiction', 'Fiction']];
   function mapGenre(list) {
     var text = (list || []).join(' | ').toLowerCase();
-    for (var i = 0; i < GENRE_RULES.length; i++) if (text.indexOf(GENRE_RULES[i][0]) > -1) return GENRE_RULES[i][1];
-    return '';
+    var hit = '';
+    for (var i = 0; i < GENRE_RULES.length; i++) if (text.indexOf(GENRE_RULES[i][0]) > -1) { hit = GENRE_RULES[i][1]; break; }
+    // A novel tagged with a nonfiction subject is still fiction
+    if (/^(History|Biography|Self-Help|Business)$/.test(hit) && /(^|[^n])fiction/.test(text.replace(/non-?fiction/g, ''))) hit = 'Fiction';
+    return hit;
   }
   function fromGoogle(v) {
     return fetchJSON('https://www.googleapis.com/books/v1/volumes?q=isbn:' + v).then(function (d) {
-      var vi = d && d.items && d.items[0] && d.items[0].volumeInfo;
-      if (!vi || !vi.title) return null;
-      var img = vi.imageLinks && (vi.imageLinks.thumbnail || vi.imageLinks.smallThumbnail);
-      return { title: vi.title, author: (vi.authors || []).join(', '), pages: vi.pageCount || '', genre: mapGenre(vi.categories), coverUrl: img ? img.replace(/^http:/, 'https:').replace('&edge=curl', '') : '' };
+      var item = d && d.items && d.items[0];
+      if (!item) return null;
+      // The single-volume record usually carries the page count and fuller categories
+      return fetchJSON('https://www.googleapis.com/books/v1/volumes/' + item.id).catch(function () { return null; }).then(function (full) {
+        var vi = (full && full.volumeInfo) || item.volumeInfo || {};
+        var img = vi.imageLinks && (vi.imageLinks.medium || vi.imageLinks.small || vi.imageLinks.thumbnail || vi.imageLinks.smallThumbnail);
+        return {
+          title: vi.title || '',
+          author: (vi.authors || []).join(', '),
+          pages: vi.pageCount || vi.printedPageCount || 0,
+          subjects: (vi.categories || []).concat((item.volumeInfo && item.volumeInfo.categories) || []),
+          coverUrl: img ? img.replace(/^http:/, 'https:').replace('&edge=curl', '') : ''
+        };
+      });
     });
   }
-  function fromOpenLibrary(v) {
+  function fromOpenLibraryBooks(v) {
     return fetchJSON('https://openlibrary.org/api/books?bibkeys=ISBN:' + v + '&format=json&jscmd=data').then(function (d) {
       var b = d && d['ISBN:' + v];
-      if (!b || !b.title) return null;
-      return { title: b.title, author: (b.authors || []).map(function (a) { return a.name; }).join(', '), pages: b.number_of_pages || '', genre: mapGenre((b.subjects || []).map(function (x) { return x.name; })), coverUrl: b.cover ? (b.cover.medium || b.cover.large || '') : '' };
+      if (!b) return null;
+      return {
+        title: b.title || '',
+        author: (b.authors || []).map(function (a) { return a.name; }).join(', '),
+        pages: b.number_of_pages || 0,
+        subjects: (b.subjects || []).map(function (x) { return x.name; }),
+        coverUrl: b.cover ? (b.cover.medium || b.cover.large || '') : ''
+      };
+    });
+  }
+  function fromOpenLibrarySearch(v) {
+    return fetchJSON('https://openlibrary.org/search.json?isbn=' + v + '&fields=title,author_name,number_of_pages_median,subject,cover_i&limit=1').then(function (d) {
+      var b = d && d.docs && d.docs[0];
+      if (!b) return null;
+      return {
+        title: b.title || '',
+        author: (b.author_name || []).slice(0, 3).join(', '),
+        pages: b.number_of_pages_median || 0,
+        subjects: (b.subject || []).slice(0, 60),
+        coverUrl: b.cover_i ? 'https://covers.openlibrary.org/b/id/' + b.cover_i + '-M.jpg' : ''
+      };
+    });
+  }
+  // Ask all three sources at once and fill each field from whichever source has it
+  function lookupAll(v) {
+    var safe = function (p) { return p.catch(function () { return undefined; }); };
+    return Promise.all([safe(fromGoogle(v)), safe(fromOpenLibraryBooks(v)), safe(fromOpenLibrarySearch(v))]).then(function (r) {
+      var g = r[0], ob = r[1], os = r[2];
+      var answered = r.filter(function (x) { return x !== undefined; }).length;
+      var found = [g, ob, os].filter(Boolean);
+      if (!found.length) return { book: null, offline: answered === 0 };
+      var first = function (key, order) { for (var i = 0; i < order.length; i++) if (order[i] && order[i][key]) return order[i][key]; return ''; };
+      var subjects = [];
+      found.forEach(function (x) { subjects = subjects.concat(x.subjects || []); });
+      return {
+        book: {
+          title: first('title', [g, ob, os]),
+          author: first('author', [g, ob, os]),
+          pages: first('pages', [g, ob, os]),
+          genre: (g && mapGenre(g.subjects)) || (ob && mapGenre(ob.subjects)) || (os && mapGenre(os.subjects)) || mapGenre(subjects),
+          coverUrl: first('coverUrl', [os, ob, g])
+        }
+      };
     });
   }
   function fillForm(b) {
     $('#f-title').value = b.title || '';
     $('#f-author').value = b.author || '';
-    if (b.genre) $('#f-genre').value = b.genre;
-    if (b.pages) $('#f-pages').value = b.pages;
+    $('#f-genre').value = b.genre || '';
+    $('#f-pages').value = b.pages || '';
   }
   function lookup() {
     var input = $('#isbn'), msg = $('#lookup-msg');
     var v = ((input && input.value) || '').replace(/[^0-9Xx]/g, '').toUpperCase();
     if (v.length !== 10 && v.length !== 13) { msg.textContent = 'ISBNs have 10 or 13 digits. Check the number under the barcode.'; return; }
     state.isbn = v; state.coverUrl = '';
-    var local = CATALOG.filter(function (c) { return c.isbn === v; })[0];
-    if (local) { fillForm(local); msg.textContent = 'Found it! ' + local.title + ' by ' + local.author + '. Check the details and save.'; return; }
     msg.textContent = 'Looking up ' + v + '…';
-    fromGoogle(v).catch(function () { return null; })
-      .then(function (b) { return b || fromOpenLibrary(v); })
-      .then(function (b) {
-        if (!document.body.contains(msg)) return;
-        if (b) {
-          fillForm(b); state.coverUrl = b.coverUrl || '';
-          msg.textContent = 'Found it! ' + b.title + (b.author ? ' by ' + b.author : '') + '. Check the details and save.';
-        } else {
-          msg.textContent = 'No match for ' + v + '. Type the details below.';
-          $('#f-title').focus();
-        }
-      })
-      .catch(function () { if (document.body.contains(msg)) msg.textContent = 'Could not reach the book database. Check your connection, or type the details below.'; });
+    lookupAll(v).then(function (res) {
+      if (!document.body.contains(msg)) return;
+      var b = res.book;
+      if (!b) {
+        var local = CATALOG.filter(function (c) { return c.isbn === v; })[0];
+        if (local) { fillForm(local); msg.textContent = 'Found it! ' + local.title + ' by ' + local.author + '. Check the details and save.'; return; }
+        msg.textContent = res.offline ? 'Could not reach the book databases. Check your connection, or type the details below.' : 'No match for ' + v + '. Type the details below.';
+        $('#f-title').focus();
+        return;
+      }
+      fillForm(b);
+      state.coverUrl = b.coverUrl || '';
+      var missing = [];
+      if (!b.author) missing.push(['author', '#f-author']);
+      if (!b.genre) missing.push(['genre', '#f-genre']);
+      if (!b.pages) missing.push(['page count', '#f-pages']);
+      var head = 'Found it! ' + b.title + (b.author ? ' by ' + b.author : '') + '.';
+      if (missing.length) {
+        msg.textContent = head + ' The databases had no ' + missing.map(function (m) { return m[0]; }).join(' or ') + ', so add ' + (missing.length > 1 ? 'those' : 'that') + ' below.';
+        $(missing[0][1]).focus();
+      } else msg.textContent = head + ' Check the details and save.';
+    });
   }
 
-  /* ---------- Barcode scanning ---------- */
-  var scanner = null;
-  function scanConfig() {
-    var F = window.Html5QrcodeSupportedFormats, cfg = { verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
-    if (F) cfg.formatsToSupport = [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E];
-    return cfg;
-  }
-  // Scale a photo down so the decoder sees crisp bars without choking on a 12MP image
-  function shrink(file, max) {
-    return new Promise(function (resolve) {
-      var url = URL.createObjectURL(file), img = new Image();
-      img.onload = function () {
-        var k = Math.min(1, max / Math.max(img.width, img.height));
-        var c = document.createElement('canvas');
-        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        c.toBlob(function (b) { resolve(b ? new File([b], 'scan.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.92);
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
-      img.src = url;
+  /* ---------- Barcode scanning (ZXing engine, bundled in /vendor) ---------- */
+  var detector = null, cam = { stream: null, timer: null, busy: false, n: 0, priceSeen: false };
+  function getDetector() {
+    if (detector) return detector;
+    var api = window.BarcodeDetectionAPI;
+    if (!api || !api.BarcodeDetector) return null;
+    api.setZXingModuleOverrides({
+      locateFile: function (path, prefix) { return /\.wasm$/.test(path) ? new URL('vendor/zxing_reader.wasm', document.baseURI).href : prefix + path; }
     });
+    detector = new api.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+    return detector;
   }
-  function decodeFile(file, sizes) {
-    sizes = sizes || [1600, 1100, 2400];
-    if (typeof window.Html5Qrcode === 'undefined') return Promise.reject(new Error('not loaded'));
-    var tryAt = function (i) {
-      if (i >= sizes.length) return Promise.reject(new Error('no barcode'));
-      return shrink(file, sizes[i]).then(function (f) {
-        return new window.Html5Qrcode('reader-file', scanConfig()).scanFile(f, false);
-      }).catch(function () { return tryAt(i + 1); });
-    };
-    return tryAt(0);
+  function warmUpScanner() {
+    var d = getDetector();
+    if (!d) return;
+    var c = document.createElement('canvas'); c.width = c.height = 8;
+    d.detect(c).catch(function () {});
   }
-  function readBarcodeImage(file, sizes) {
-    var msg = $('#lookup-msg');
-    msg.textContent = 'Reading the barcode…';
-    decodeFile(file, sizes).then(function (text) {
-      stopScan();
-      $('#isbn').value = text;
-      if (navigator.vibrate) navigator.vibrate(40);
-      lookup();
-    }, function () {
-      if (document.body.contains(msg)) msg.textContent = 'Could not find a barcode in that shot. Get closer so the barcode fills most of the frame, keep it sharp and well lit, and try again. You can also type the ISBN.';
-    });
+  function isIsbn(code) { return /^97[89]\d{10}$/.test(code); }
+  function bestCode(codes) {
+    var values = (codes || []).map(function (c) { return String(c.rawValue || '').replace(/\D/g, ''); });
+    var isbn = values.filter(isIsbn)[0];
+    if (isbn) return isbn;
+    if (values.length) cam.priceSeen = true;
+    return '';
   }
-  function captureFrame() {
-    var v = document.querySelector('#reader video');
-    if (!v || !v.videoWidth) { $('#lookup-msg').textContent = 'The camera is still starting. Try Capture again in a second.'; return; }
-    var c = document.createElement('canvas');
-    c.width = v.videoWidth; c.height = v.videoHeight;
-    c.getContext('2d').drawImage(v, 0, 0);
-    c.toBlob(function (b) { if (b) readBarcodeImage(new File([b], 'frame.jpg', { type: 'image/jpeg' }), [c.width, 1100]); }, 'image/jpeg', 0.95);
+  function gotCode(code) {
+    stopScan();
+    $('#isbn').value = code;
+    if (navigator.vibrate) navigator.vibrate(40);
+    lookup();
+  }
+  function grab(v, crop) {
+    var w = v.videoWidth || v.naturalWidth || v.width, h = v.videoHeight || v.naturalHeight || v.height;
+    var cw = crop ? Math.round(w * 0.92) : w, ch = crop ? Math.round(h * 0.55) : h;
+    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    c.getContext('2d').drawImage(v, (w - cw) / 2, (h - ch) / 2, cw, ch, 0, 0, cw, ch);
+    return c;
   }
   function startScan() {
-    var msg = $('#lookup-msg'), reader = $('#reader'), btn = $('#scan-btn');
-    if (typeof window.Html5Qrcode === 'undefined') { msg.textContent = 'The scanner is still loading. Try again in a moment, or type the ISBN.'; return; }
-    reader.hidden = false; btn.textContent = 'Stop live scan'; $('#capture-btn').hidden = false;
-    msg.textContent = 'Fill the box with the barcode and hold steady about 4 to 6 inches away. It reads automatically, or tap Capture.';
-    try { scanner = new window.Html5Qrcode('reader', scanConfig()); }
-    catch (e) { stopScan(); msg.textContent = 'The scanner could not start. Type the ISBN instead.'; return; }
-    scanner.start(
-      { facingMode: 'environment' },
-      {
-        fps: 15,
-        disableFlip: true,
-        qrbox: function (w, h) { return { width: Math.round(w * 0.9), height: Math.round(Math.max(80, Math.min(h * 0.55, 220))) }; },
-        videoConstraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' }] }
-      },
-      function (text) { stopScan(); $('#isbn').value = text; if (navigator.vibrate) navigator.vibrate(40); lookup(); },
-      function () {}
-    ).catch(function () {
-      stopScan();
-      msg.textContent = 'Camera unavailable. Allow camera access for this site (on iPhone: Settings › Safari › Camera), then try again, or type the ISBN.';
-    });
+    var msg = $('#lookup-msg'), reader = $('#reader');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg.textContent = 'This browser cannot open the camera here. Use Take a photo instead.'; return; }
+    if (!getDetector()) { msg.textContent = 'The scanner is still loading. Try again in a moment, or use Take a photo.'; return; }
+    reader.innerHTML = '<video playsinline muted autoplay></video><div class="aim" aria-hidden="true"><span></span></div>';
+    reader.hidden = false;
+    $('#scan-btn').textContent = 'Stop live scan';
+    $('#capture-btn').hidden = false;
+    cam.priceSeen = false; cam.n = 0;
+    msg.textContent = 'Hold the book 6 to 8 inches away with the barcode across the box. It reads on its own.';
+    navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } })
+      .then(function (stream) {
+        if (reader.hidden || !document.body.contains(reader)) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+        cam.stream = stream;
+        var v = reader.querySelector('video');
+        v.srcObject = stream;
+        v.play().catch(function () {});
+        try {
+          var track = stream.getVideoTracks()[0], caps = track.getCapabilities ? track.getCapabilities() : {}, adv = {};
+          if (caps.focusMode && caps.focusMode.indexOf('continuous') > -1) adv.focusMode = 'continuous';
+          if (caps.zoom && caps.zoom.max >= 1.6) adv.zoom = 1.6; // lets newer iPhones focus without holding the book too close
+          if (Object.keys(adv).length) track.applyConstraints({ advanced: [adv] }).catch(function () {});
+        } catch (e) {}
+        scanLoop(v);
+      })
+      .catch(function (err) {
+        stopScan();
+        msg.textContent = err && err.name === 'NotAllowedError'
+          ? 'Camera access is off for this site. On iPhone: Settings › Apps › Safari › Camera › Allow, then try again. Or use Take a photo.'
+          : 'The camera could not start. Use Take a photo, or type the ISBN.';
+      });
+  }
+  function scanLoop(v) {
+    var tick = function () {
+      if (!cam.stream) return;
+      if (cam.busy || !v.videoWidth) { cam.timer = setTimeout(tick, 120); return; }
+      cam.n++;
+      cam.busy = true;
+      detector.detect(grab(v, cam.n % 3 !== 0)).then(function (codes) {
+        cam.busy = false;
+        var code = bestCode(codes);
+        if (code) { gotCode(code); return; }
+        if (cam.priceSeen && cam.n % 15 === 0) $('#lookup-msg').textContent = 'That barcode is a price code. Find the one that starts with 978, often on the back or just inside the front cover.';
+        cam.timer = setTimeout(tick, 80);
+      }, function () { cam.busy = false; cam.timer = setTimeout(tick, 250); });
+    };
+    tick();
   }
   function stopScan() {
-    var s = scanner; scanner = null;
-    if (s) { try { s.stop().then(function () { try { s.clear(); } catch (e) {} }, function () {}); } catch (e) {} }
-    var r = $('#reader'); if (r) r.hidden = true;
+    clearTimeout(cam.timer);
+    if (cam.stream) cam.stream.getTracks().forEach(function (t) { t.stop(); });
+    cam.stream = null; cam.busy = false;
+    var r = $('#reader'); if (r) { r.hidden = true; r.innerHTML = ''; }
     var c = $('#capture-btn'); if (c) c.hidden = true;
     var b = $('#scan-btn'); if (b) b.textContent = 'Live scan';
+  }
+  function detectIn(sources) {
+    var i = 0;
+    var next = function () {
+      if (i >= sources.length) return Promise.resolve('');
+      var src = sources[i++];
+      return detector.detect(src).then(function (codes) { return bestCode(codes) || next(); }, next);
+    };
+    return next();
+  }
+  function captureFrame() {
+    var v = document.querySelector('#reader video'), msg = $('#lookup-msg');
+    if (!v || !v.videoWidth) { msg.textContent = 'The camera is still starting. Try Capture again in a second.'; return; }
+    msg.textContent = 'Reading the barcode…';
+    detectIn([grab(v, false), grab(v, true)]).then(function (code) {
+      if (code) gotCode(code);
+      else msg.textContent = cam.priceSeen ? 'That barcode is a price code. Find the one that starts with 978.' : 'No barcode in that frame. Hold steady 6 to 8 inches away and try again.';
+    });
+  }
+  function scaled(img, max) {
+    var k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    var c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+  function readBarcodeImage(file) {
+    var msg = $('#lookup-msg');
+    if (!getDetector()) { msg.textContent = 'The scanner is still loading. Try again in a moment, or type the ISBN.'; return; }
+    msg.textContent = 'Reading the barcode…';
+    cam.priceSeen = false;
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      detectIn([scaled(img, 2000), scaled(img, 1200), scaled(img, 3200)]).then(function (code) {
+        URL.revokeObjectURL(url);
+        if (!document.body.contains(msg)) return;
+        if (code) gotCode(code);
+        else msg.textContent = cam.priceSeen
+          ? 'That photo shows a price barcode. Photograph the one that starts with 978.'
+          : 'Could not find a barcode in that photo. Get closer so the barcode fills most of the frame, keep it sharp and well lit, and try again. You can also type the ISBN.';
+      });
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); msg.textContent = 'That photo could not be opened. Try again, or type the ISBN.'; };
+    img.src = url;
   }
 
   /* ---------- Backup ---------- */
@@ -1179,7 +1302,7 @@ textarea.field { width: 100%; resize: vertical; line-height: 1.5; }
         if (state.method === 'type') $('#f-title').focus();
         break;
       case 'lookup': lookup(); break;
-      case 'scan': if (scanner) stopScan(); else startScan(); break;
+      case 'scan': if ($('#reader') && !$('#reader').hidden) stopScan(); else startScan(); break;
       case 'capture': captureFrame(); break;
       case 'native-share': if (navigator.share) navigator.share({ text: $('#share-text').value }).catch(function () {}); break;
       case 'export': exportBackup(); break;
